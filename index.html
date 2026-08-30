@@ -303,10 +303,10 @@
 
             let inputHtml = '';
             if (isMandatory) {
-              // inputmode="numeric" 與 pattern="[0-9]*" 確保手機優先開啟九宮格數字鍵盤
-              inputHtml = `<input type="number" inputmode="numeric" pattern="[0-9]*" id="input_${item.Item_ID}" placeholder="請輸入數值" required>`;
+              // 改為 type="tel" 強制 iOS 喚起大按鈕電話/九宮格數字鍵盤
+              inputHtml = `<input type="tel" inputmode="numeric" pattern="[0-9]*" id="input_${item.Item_ID}" placeholder="請輸入數值" required>`;
             } else if (item.Input_Type === 'optional_qty') {
-              inputHtml = `<input type="number" inputmode="numeric" pattern="[0-9]*" id="input_${item.Item_ID}" value="${item.Standard_Qty || 0}" style="width: 80px; display:inline-block;"> 包/個 (預設齊全)`;
+              inputHtml = `<input type="tel" inputmode="numeric" pattern="[0-9]*" id="input_${item.Item_ID}" value="${item.Standard_Qty || 0}" style="width: 80px; display:inline-block;"> 包/個 (預設齊全)`;
             } else {
               inputHtml = `<select id="input_${item.Item_ID}"><option value="正常">✅ 正常 / 完整</option><option value="異常">❌ 異常 / 缺失</option></select>`;
             }
