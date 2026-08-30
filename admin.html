@@ -29,7 +29,6 @@
     
     .section-header { font-weight: bold; margin: 16px 0 8px 4px; color: #334155; }
     
-    /* 🌀 CSS 轉圈圈圖示 */
     .spinner {
       display: inline-block;
       width: 16px;
@@ -103,6 +102,32 @@
       loadPendingData();
     };
 
+    // 強效器材名稱提取器（避免標頭命名不吻合）
+    function parseItemName(d) {
+      if (!d) return "器材項目";
+      for (let key in d) {
+        const cleanKey = key.toLowerCase().replace(/[^a-z0-9]/g, '');
+        if (cleanKey === 'itemname' || cleanKey === 'item' || key.includes('項目') || key.includes('名稱') || key.includes('器材')) {
+          if (d[key]) return d[key];
+        }
+      }
+      const values = Object.values(d);
+      return values[2] || d.Item_Name || d.itemName || "器材項目";
+    }
+
+    // 強效填寫值提取器
+    function parseInputValue(d) {
+      if (!d) return "";
+      for (let key in d) {
+        const cleanKey = key.toLowerCase().replace(/[^a-z0-9]/g, '');
+        if (cleanKey === 'inputvalue' || cleanKey === 'value' || key.includes('數值') || key.includes('填寫')) {
+          if (d[key] !== undefined) return d[key];
+        }
+      }
+      const values = Object.values(d);
+      return values[3] !== undefined ? values[3] : (d.Input_Value || d.inputValue || "");
+    }
+
     function loadInitData() {
       fetch(`${GAS_API_URL}?action=getInitData`)
         .then(res => res.json())
@@ -141,7 +166,6 @@
       }
 
       container.innerHTML = records.map(r => {
-        // 時間格式清理：將 ISO 字串轉換為易讀格式
         let timeDisplay = String(r.Timestamp || '');
         if (timeDisplay.includes('T')) {
           timeDisplay = timeDisplay.replace('T', ' ').substring(0, 19);
@@ -149,18 +173,16 @@
 
         let metricsHtml = '';
         if (r.details && r.details.length > 0) {
-          // 過濾：只留下「非純正常」的項目（包含氣壓、電量數字，或異常報欠項目）
           const keyDetails = r.details.filter(d => {
-            const val = String(d.Input_Value || d.inputValue || '');
+            const val = String(parseInputValue(d));
             const isAbnormal = d.Is_Abnormal === 'TRUE' || d.Is_Abnormal === true || d.isAbnormal === true;
             return val !== '正常' || isAbnormal;
           });
 
           if (keyDetails.length > 0) {
             const detailList = keyDetails.map(d => {
-              // 欄位名稱容錯相容
-              const name = d.Item_Name || d.itemName || d.ItemName || '器材項目';
-              const val = d.Input_Value || d.inputValue || d.InputValue || '';
+              const name = parseItemName(d);
+              const val = parseInputValue(d);
               const isAbnormal = d.Is_Abnormal === 'TRUE' || d.Is_Abnormal === true || d.isAbnormal === true;
               const note = d.Item_Note || d.itemNote || '';
 
@@ -198,7 +220,7 @@
       }
 
       container.innerHTML = issues.map(i => {
-        const name = i.Item_Name || i.itemName || '器材項目';
+        const name = parseItemName(i);
         return `
           <div class="card">
             <div style="display:flex; justify-content:space-between; align-items:center;">
@@ -252,8 +274,8 @@
       }
 
       const detailRows = record.details.map(d => {
-        const name = d.Item_Name || d.itemName || '器材項目';
-        const val = d.Input_Value || d.inputValue || '';
+        const name = parseItemName(d);
+        const val = parseInputValue(d);
         const isAbnormal = d.Is_Abnormal === 'TRUE' || d.Is_Abnormal === true || d.isAbnormal === true;
         const note = d.Item_Note || d.itemNote || '-';
 
