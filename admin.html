@@ -8,12 +8,25 @@
     body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; background: #f8fafc; margin: 0; padding: 12px; }
     .header { background: #0f172a; color: white; padding: 14px 16px; border-radius: 12px; margin-bottom: 12px; }
     .card { background: white; padding: 14px; border-radius: 10px; border: 1px solid #e2e8f0; margin-bottom: 12px; }
-    .card-title { font-weight: bold; font-size: 1rem; color: #1e3a8a; }
+    .card-title { font-weight: bold; font-size: 1.05rem; color: #1e3a8a; }
     .card-sub { font-size: 0.85rem; color: #64748b; margin: 4px 0 8px 0; }
+    
+    .metrics-box {
+      background: #f1f5f9;
+      border-radius: 8px;
+      padding: 10px;
+      margin: 8px 0;
+      font-size: 0.88rem;
+      border-left: 4px solid #3b82f6;
+    }
+    .metrics-title { font-weight: bold; color: #1e3a8a; margin-bottom: 4px; }
+    .metric-item { margin: 2px 0; color: #334155; }
+    
     .badge-danger { background: #fee2e2; color: #991b1b; padding: 2px 6px; border-radius: 4px; font-size: 0.8rem; font-weight: bold; }
-    .btn-approve { background: #10b981; color: white; border: none; padding: 8px 12px; border-radius: 6px; font-weight: bold; cursor: pointer; float: right; }
+    .btn-approve { background: #10b981; color: white; border: none; padding: 8px 14px; border-radius: 6px; font-weight: bold; cursor: pointer; float: right; }
     .btn-resolve { background: #3b82f6; color: white; border: none; padding: 6px 10px; border-radius: 6px; font-size: 0.85rem; cursor: pointer; }
     .section-header { font-weight: bold; margin: 16px 0 8px 4px; color: #334155; }
+    .loading-text { color: #64748b; font-size: 0.88rem; padding: 8px 4px; }
   </style>
 </head>
 <body>
@@ -24,31 +37,53 @@
   </div>
 
   <div class="card" style="margin-bottom:16px;">
-    <label style="font-weight:bold; font-size:0.9rem;">簽核幹部姓名：</label>
-    <input type="text" id="reviewerName" placeholder="請輸入幹部姓名" style="width:100%; padding:8px; margin-top:6px; box-sizing:border-box;">
+    <label style="font-weight:bold; font-size:0.9rem;">選擇簽核幹部：</label>
+    <select id="reviewerSelect" style="width:100%; padding:10px; margin-top:6px; box-sizing:border-box; font-size:0.95rem; border-radius:8px; border:1px solid #cbd5e1;">
+      <option value="">⏳ 載入幹部名單中...</option>
+    </select>
   </div>
 
   <div class="section-header">📌 待簽核清單</div>
-  <div id="recordsContainer"></div>
+  <div id="recordsContainer"><div class="loading-text">⏳ 正在讀取簽核單...</div></div>
 
   <div class="section-header">🚨 待處置缺失項目</div>
-  <div id="issuesContainer"></div>
+  <div id="issuesContainer"><div class="loading-text">⏳ 正在讀取缺失項目...</div></div>
 
   <script>
     const GAS_API_URL = "https://script.google.com/macros/s/AKfycbyBXwfnayjato5donoxrdOUVtv45EihyOU1tYxq8Nix2DsB6AtRBEP1pu4ohc4lrRs_0A/exec";
 
     window.onload = function() {
+      loadInitData();
       loadPendingData();
     };
+
+    function loadInitData() {
+      fetch(`${GAS_API_URL}?action=getInitData`)
+        .then(res => res.json())
+        .then(res => {
+          if (res.success && res.data.users) {
+            const select = document.getElementById('reviewerSelect');
+            // 過濾 Role 為 reviewer 或 admin 的同仁（若無指定則顯示全部人員）
+            const reviewers = res.data.users.filter(u => u.Role === 'reviewer' || u.Role === 'admin');
+            const list = reviewers.length > 0 ? reviewers : res.data.users;
+            select.innerHTML = '<option value="">-- 請選擇簽核幹部 --</option>' + 
+              list.map(u => `<option value="${u.User_Name}">${u.User_Name}</option>`).join('');
+          }
+        });
+    }
 
     function loadPendingData() {
       fetch(`${GAS_API_URL}?action=getPendingData`)
         .then(res => res.json())
         .then(res => {
-          if(res.success) {
-            renderRecords(res.data.records);
-            renderIssues(res.data.issues);
+          if(res.success && res.data) {
+            renderRecords(res.data.records || []);
+            renderIssues(res.data.issues || []);
           }
+        })
+        .catch(err => {
+          console.error("載入失敗：", err);
+          document.getElementById('recordsContainer').innerHTML = '<div class="card" style="color:#ef4444;">⚠️ 讀取失敗！請確認 GAS 已部署為「新版本」。</div>';
         });
     }
 
@@ -59,14 +94,35 @@
         return;
       }
 
-      container.innerHTML = records.map(r => `
-        <div class="card">
-          <button class="btn-approve" onclick="approveCheck('${r.Check_ID}')">✅ 批准簽核</button>
-          <div class="card-title">${r.Vehicle_Name} 救護車</div>
-          <div class="card-sub">清點同仁：${r.Checker} | 時間：${r.Timestamp}</div>
-          <div style="font-size:0.85rem; color:#475569;">整體備註：${r.General_Note || '無'}</div>
-        </div>
-      `).join('');
+      container.innerHTML = records.map(r => {
+        // 整理並顯示關鍵數據（氣壓、電量或任何非預設輸入的欄位）
+        let metricsHtml = '';
+        if (r.details && r.details.length > 0) {
+          const detailList = r.details.map(d => {
+            const isAbnormal = d.Is_Abnormal === 'TRUE' || d.Is_Abnormal === true;
+            const mark = isAbnormal ? ' ⚠️<span style="color:#ef4444;">(缺失/低於標準)</span>' : '';
+            const note = d.Item_Note ? ` <span style="color:#64748b;">[備註: ${d.Item_Note}]</span>` : '';
+            return `<div class="metric-item">• <strong>${d.Item_Name}</strong>: ${d.Input_Value}${mark}${note}</div>`;
+          }).join('');
+
+          metricsHtml = `
+            <div class="metrics-box">
+              <div class="metrics-title">📊 檢查數據與報欠明細：</div>
+              ${detailList}
+            </div>
+          `;
+        }
+
+        return `
+          <div class="card">
+            <button class="btn-approve" onclick="approveCheck('${r.Check_ID}')">✅ 批准簽核</button>
+            <div class="card-title">${r.Vehicle_Name} 救護車</div>
+            <div class="card-sub">清點同仁：${r.Checker} | 時間：${r.Timestamp}</div>
+            ${metricsHtml}
+            <div style="font-size:0.85rem; color:#475569; margin-top:4px;">整體備註：${r.General_Note || '無'}</div>
+          </div>
+        `;
+      }).join('');
     }
 
     function renderIssues(issues) {
@@ -91,9 +147,9 @@
     }
 
     function approveCheck(checkId) {
-      const reviewer = document.getElementById('reviewerName').value;
+      const reviewer = document.getElementById('reviewerSelect').value;
       if (!reviewer) {
-        alert("⚠️ 請先在最上方輸入簽核幹部姓名！");
+        alert("⚠️ 請先在最上方選擇簽核幹部姓名！");
         return;
       }
 
@@ -110,9 +166,9 @@
     }
 
     function resolveIssue(issueId) {
-      const reviewer = document.getElementById('reviewerName').value;
+      const reviewer = document.getElementById('reviewerSelect').value;
       if (!reviewer) {
-        alert("⚠️ 請先在最上方輸入幹部姓名！");
+        alert("⚠️ 請先在最上方選擇簽核幹部姓名！");
         return;
       }
 
