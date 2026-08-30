@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>救護車輛與裝備晨間清點系統</title>
+  <title>每日救護車檢查</title>
   <style>
     :root {
       --primary: #1e3a8a;
@@ -29,7 +29,7 @@
       margin-bottom: 12px;
       box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
     }
-    .header h1 { margin: 0; font-size: 1.2rem; }
+    .header h1 { margin: 0; font-size: 1.25rem; }
     .header p { margin: 4px 0 0 0; font-size: 0.8rem; opacity: 0.85; }
     
     .form-group {
@@ -49,29 +49,26 @@
       font-size: 0.95rem;
     }
 
-    /* 分頁導覽按鈕 */
-    .nav-tabs {
+    /* 接續式步驟指示條 */
+    .step-nav {
       display: flex;
       gap: 6px;
       margin-bottom: 12px;
       overflow-x: auto;
-      padding-bottom: 4px;
     }
-    .tab-btn {
+    .step-btn {
       flex: 1;
       padding: 10px 6px;
       background: #e2e8f0;
-      color: #475569;
+      color: #64748b;
       border: none;
       border-radius: 8px;
-      font-size: 0.85rem;
+      font-size: 0.82rem;
       font-weight: bold;
-      cursor: pointer;
-      white-space: nowrap;
       text-align: center;
       transition: all 0.2s ease;
     }
-    .tab-btn.active {
+    .step-btn.active {
       background: var(--primary);
       color: white;
       box-shadow: 0 2px 4px rgba(0,0,0,0.15);
@@ -108,6 +105,7 @@
       font-weight: bold;
     }
 
+    /* 底部雙按鈕控制列 */
     .submit-bar {
       position: fixed;
       bottom: 0; left: 0; right: 0;
@@ -116,9 +114,23 @@
       border-top: 1px solid var(--border);
       box-shadow: 0 -4px 6px -1px rgba(0,0,0,0.08);
       z-index: 100;
+      display: flex;
+      gap: 10px;
     }
-    .btn-submit {
-      width: 100%;
+    .btn-prev {
+      flex: 1;
+      background: #64748b;
+      color: white;
+      border: none;
+      padding: 12px;
+      border-radius: 10px;
+      font-size: 0.95rem;
+      font-weight: bold;
+      cursor: pointer;
+      display: none;
+    }
+    .btn-next {
+      flex: 2;
       background: var(--primary);
       color: white;
       border: none;
@@ -128,6 +140,7 @@
       font-weight: bold;
       cursor: pointer;
     }
+
     .loading-overlay {
       position: fixed; top: 0; left: 0; right: 0; bottom: 0;
       background: rgba(255,255,255,0.9);
@@ -144,8 +157,8 @@
   </div>
 
   <div class="header">
-    <h1>🚑 救護車輛與裝備晨間清點</h1>
-    <p>預設全數齊全，請確實輸入電量/氣壓與缺失備註</p>
+    <h1>🚑 每日救護車檢查</h1>
+    <p>接續式流程：完成本頁後請按下方「下一步」</p>
   </div>
 
   <div class="form-group">
@@ -158,25 +171,30 @@
     <select id="userSelect"></select>
   </div>
 
-  <!-- 分頁頁籤 -->
-  <div class="nav-tabs" id="tabsNav"></div>
+  <!-- 步驟進度條 -->
+  <div class="step-nav" id="stepNav"></div>
 
   <!-- 分頁內容容器 -->
   <div id="tabsContainer"></div>
 
-  <div class="form-group" style="margin-top: 16px;">
+  <div id="generalNoteGroup" class="form-group" style="margin-top: 16px; display: none;">
     <label>整體狀況備註（選填）：</label>
     <textarea id="generalNote" rows="2" placeholder="例：車載氧瓶蓋略緊，已潤滑處理..."></textarea>
   </div>
 
+  <!-- 底部固定按鈕列 -->
   <div class="submit-bar">
-    <button class="btn-submit" onclick="submitCheck()">🚀 完成並送出檢查單</button>
+    <button id="prevBtn" class="btn-prev" onclick="goToPrevStep()">⬅️ 上一步</button>
+    <button id="nextBtn" class="btn-next" onclick="goToNextStep()">下一步 ➔</button>
   </div>
 
   <script>
     const GAS_API_URL = "https://script.google.com/macros/s/AKfycbyBXwfnayjato5donoxrdOUVtv45EihyOU1tYxq8Nix2DsB6AtRBEP1pu4ohc4lrRs_0A/exec";
 
     let initData = { vehicles: [], users: [], items: [] };
+    let currentStep = 0;
+    let totalSteps = 0;
+    let categories1List = [];
 
     window.onload = function() {
       fetchInitData();
@@ -209,58 +227,59 @@
       uSelect.innerHTML = initData.users.map(u => `<option value="${u.User_Name}">${u.User_Name}</option>`).join('');
     }
 
-    // 依試算表配色映射風格
-    function getCategoryStyle(cat2) {
+    // 色彩邏輯：第一部分(器材包/急救包)全面套用紅色系
+    function getCategoryStyle(cat1, cat2) {
+      cat1 = String(cat1 || '');
       cat2 = String(cat2 || '');
-      if (cat2.includes('IV包')) {
-        return { bg: '#fff1f2', border: '#fca5a5', tagBg: '#fecdd3', tagColor: '#9f1239' }; // 粉紅/紅色
+
+      if (cat1.includes('第一部') || cat2.includes('急救包') || cat2.includes('器材包')) {
+        return { bg: '#fff1f2', border: '#fca5a5', tagBg: '#fee2e2', tagColor: '#991b1b' }; // 柔和紅色系
       } else if (cat2.includes('攜帶氧')) {
-        return { bg: '#f0f9ff', border: '#7dd3fc', tagBg: '#bae6fd', tagColor: '#0369a1' }; // 天藍/水藍色
+        return { bg: '#f0f9ff', border: '#7dd3fc', tagBg: '#bae6fd', tagColor: '#0369a1' }; // 水藍色
       } else if (cat2.includes('ZOLL')) {
-        return { bg: '#fffbeb', border: '#fcd34d', tagBg: '#fef3c7', tagColor: '#b45309' }; // 黃/橘色
-      } else if (cat2.includes('產包') || cat2.includes('燒燙傷') || cat2.includes('大傷')) {
-        return { bg: '#faf5ff', border: '#d8b4fe', tagBg: '#e9d5ff', tagColor: '#6b21a8' }; // 紫色
-      } else if (cat2.includes('車上')) {
+        return { bg: '#fffbeb', border: '#fcd34d', tagBg: '#fef3c7', tagColor: '#b45309' }; // 金黃色
+      } else if (cat1.includes('第三部') || cat2.includes('產包') || cat2.includes('燒燙傷') || cat2.includes('大傷')) {
+        return { bg: '#faf5ff', border: '#d8b4fe', tagBg: '#e9d5ff', tagColor: '#6b21a8' }; // 紫色系
+      } else {
         return { bg: '#f8fafc', border: '#cbd5e1', tagBg: '#e2e8f0', tagColor: '#334155' }; // 灰藍色
       }
-      return { bg: '#ffffff', border: '#e2e8f0', tagBg: '#f1f5f9', tagColor: '#475569' };
+    }
+
+    function getShortName(name) {
+      if (name.includes('第一部')) return '1. 器材包';
+      if (name.includes('第二部')) return '2. 車上裝備';
+      if (name.includes('第三部')) return '3. 特殊套組';
+      return name;
     }
 
     function renderItems() {
       const selectedVehicle = String(document.getElementById('vehicleSelect').value || '');
-      const tabsNav = document.getElementById('tabsNav');
+      const stepNav = document.getElementById('stepNav');
       const tabsContainer = document.getElementById('tabsContainer');
       
-      tabsNav.innerHTML = '';
+      stepNav.innerHTML = '';
       tabsContainer.innerHTML = '';
+      currentStep = 0;
 
-      // 過濾車輛
       const filteredItems = initData.items.filter(item => {
         const scope = String(item.Vehicle_Scope || 'ALL').trim();
         if (scope === 'ALL' || scope === '') return true;
         return scope.split(',').map(s => s.trim()).includes(selectedVehicle);
       });
 
-      // 提取 Category_1 作為三大分頁
-      const categories1 = [...new Set(filteredItems.map(i => i.Category_1))];
+      categories1List = [...new Set(filteredItems.map(i => i.Category_1))].filter(Boolean);
+      totalSteps = categories1List.length;
 
-      categories1.forEach((cat1, index) => {
-        if (!cat1) return;
-
-        // 簡化按鈕文字
-        let shortTabName = cat1;
-        if (cat1.includes('第一部')) shortTabName = '第一部分：器材包';
-        else if (cat1.includes('第二部')) shortTabName = '第二部分：車上器材耗材';
-        else if (cat1.includes('第三部')) shortTabName = '第三部分：特殊裝備套組';
-
-        // 1. 建立分頁按鈕
+      categories1List.forEach((cat1, index) => {
+        // 1. 建立頂部步驟指示按鈕
         const btn = document.createElement('button');
-        btn.className = `tab-btn ${index === 0 ? 'active' : ''}`;
-        btn.innerText = shortTabName;
-        btn.onclick = () => switchTab(index);
-        tabsNav.appendChild(btn);
+        btn.className = `step-btn ${index === 0 ? 'active' : ''}`;
+        btn.id = `stepBtn_${index}`;
+        btn.innerText = getShortName(cat1);
+        btn.onclick = () => jumpToStep(index);
+        stepNav.appendChild(btn);
 
-        // 2. 建立分頁容器
+        // 2. 建立分頁區塊
         const tabContent = document.createElement('div');
         tabContent.className = `tab-content ${index === 0 ? 'active' : ''}`;
         tabContent.id = `tabContent_${index}`;
@@ -268,9 +287,8 @@
         const cat1Items = filteredItems.filter(i => i.Category_1 === cat1);
         const categories2 = [...new Set(cat1Items.map(i => i.Category_2))];
 
-        // 依 Category_2 劃分卡片組
         categories2.forEach(cat2 => {
-          const style = getCategoryStyle(cat2);
+          const style = getCategoryStyle(cat1, cat2);
 
           const cat2Title = document.createElement('div');
           cat2Title.className = 'category2-title';
@@ -312,21 +330,103 @@
 
         tabsContainer.appendChild(tabContent);
       });
+
+      updateStepUI();
     }
 
-    function switchTab(activeIndex) {
-      const buttons = document.querySelectorAll('.tab-btn');
+    function updateStepUI() {
       const contents = document.querySelectorAll('.tab-content');
+      contents.forEach((content, idx) => {
+        if (idx === currentStep) content.classList.add('active');
+        else content.classList.remove('active');
+      });
 
+      const buttons = document.querySelectorAll('.step-btn');
       buttons.forEach((btn, idx) => {
-        if (idx === activeIndex) btn.classList.add('active');
+        if (idx === currentStep) btn.classList.add('active');
         else btn.classList.remove('active');
       });
 
-      contents.forEach((content, idx) => {
-        if (idx === activeIndex) content.classList.add('active');
-        else content.classList.remove('active');
+      const prevBtn = document.getElementById('prevBtn');
+      const nextBtn = document.getElementById('nextBtn');
+      const noteGroup = document.getElementById('generalNoteGroup');
+
+      if (currentStep === 0) {
+        prevBtn.style.display = 'none';
+      } else {
+        prevBtn.style.display = 'block';
+      }
+
+      if (currentStep === totalSteps - 1) {
+        nextBtn.innerText = '🚀 完成並送出檢查單';
+        nextBtn.style.backgroundColor = '#10b981';
+        noteGroup.style.display = 'block';
+      } else {
+        const nextCatName = getShortName(categories1List[currentStep + 1]);
+        nextBtn.innerText = `下一步：${nextCatName} ➔`;
+        nextBtn.style.backgroundColor = 'var(--primary)';
+        noteGroup.style.display = 'none';
+      }
+
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function goToNextStep() {
+      // 驗證當前頁面的必填數據
+      const currentTab = document.getElementById(`tabContent_${currentStep}`);
+      const requiredInputs = currentTab.querySelectorAll('input[required]');
+      let missing = false;
+
+      requiredInputs.forEach(input => {
+        if (!input.value) {
+          missing = true;
+          input.style.borderColor = '#ef4444';
+        } else {
+          input.style.borderColor = '#e2e8f0';
+        }
       });
+
+      if (missing) {
+        alert("⚠️ 請填寫本頁的必填數據（氣壓或電量）後再進入下一步！");
+        return;
+      }
+
+      if (currentStep === totalSteps - 1) {
+        submitCheck();
+      } else {
+        currentStep++;
+        updateStepUI();
+      }
+    }
+
+    function goToPrevStep() {
+      if (currentStep > 0) {
+        currentStep--;
+        updateStepUI();
+      }
+    }
+
+    function jumpToStep(targetStep) {
+      if (targetStep > currentStep) {
+        // 若要跳到後面頁面，強制先驗證目前頁面必填欄位
+        const currentTab = document.getElementById(`tabContent_${currentStep}`);
+        const requiredInputs = currentTab.querySelectorAll('input[required]');
+        let missing = false;
+
+        requiredInputs.forEach(input => {
+          if (!input.value) {
+            missing = true;
+            input.style.borderColor = '#ef4444';
+          }
+        });
+
+        if (missing) {
+          alert("⚠️ 請先完成本頁的必填數據（氣壓或電量）！");
+          return;
+        }
+      }
+      currentStep = targetStep;
+      updateStepUI();
     }
 
     function submitCheck() {
@@ -372,7 +472,7 @@
       });
 
       if (missingMandatory) {
-        alert("⚠️ 請確實填寫所有電量與氣壓數值！");
+        alert("⚠️ 請確實填寫所有頁面的電量與氣壓數值！");
         return;
       }
 
