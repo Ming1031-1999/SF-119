@@ -96,29 +96,30 @@
     const MANAGER_PIN = "1199"; 
     
     let allHistoricalRecords = [];
-    let itemLookupMap = {}; // 器材 ID -> 中文名稱對照表
+    let itemLookupMap = {};
 
     window.onload = function() {
-      // 核心：優先加載對照表，完成後才讀取簽核紀錄
-      loadInitData().then(() => {
-        loadPendingData();
-      });
+      // 並行同步發起，不再互相等待阻塞
+      loadInitData();
+      loadPendingData();
     };
 
     function loadInitData() {
-      return fetch(`${GAS_API_URL}?action=getInitData`)
+      fetch(`${GAS_API_URL}?action=getInitData`)
         .then(res => res.json())
         .then(res => {
           if (res.success && res.data) {
-            // 自動建立 Item_ID -> Item_Name 字典
             if (res.data.items) {
               res.data.items.forEach(i => {
                 const id = String(i.Item_ID || i.itemId || '').trim();
                 const name = i.Item_Name || i.itemName || '';
-                if (id && name) {
-                  itemLookupMap[id] = name;
-                }
+                if (id && name) itemLookupMap[id] = name;
               });
+              
+              // 若待簽核單先讀完，對照表載入後自動刷出中文名稱
+              if (allHistoricalRecords.length > 0) {
+                renderRecords(allHistoricalRecords);
+              }
             }
 
             if (res.data.users) {
@@ -130,30 +131,24 @@
             }
           }
         })
-        .catch(err => console.error("載入初始化失敗", err));
+        .catch(err => {
+          document.getElementById('reviewerSelect').innerHTML = '<option value="">⚠️ 載入失敗，請重試</option>';
+        });
     }
 
-    // 器材名稱反查解析（100% 避免器材項目預設值）
     function parseItemName(d) {
       if (!d) return "器材項目";
-
-      // 1. 優先使用 Item_ID 對照中文名稱
       const itemId = String(d.Item_ID || d.itemId || d.ItemID || '').trim();
-      if (itemId && itemLookupMap[itemId]) {
-        return itemLookupMap[itemId];
-      }
+      if (itemId && itemLookupMap[itemId]) return itemLookupMap[itemId];
 
-      // 2. 備用：讀取直接寫入的名稱
       for (let key in d) {
         const cleanKey = key.toLowerCase().replace(/[^a-z0-9]/g, '');
         if (cleanKey === 'itemname' || cleanKey === 'item' || key.includes('項目') || key.includes('名稱') || key.includes('器材')) {
           if (d[key] && String(d[key]).trim() !== '' && d[key] !== 'undefined') return d[key];
         }
       }
-
       const values = Object.values(d);
       if (values[2] && String(values[2]).trim() !== '' && values[2] !== 'undefined') return values[2];
-
       return "器材項目";
     }
 
@@ -181,7 +176,7 @@
         })
         .catch(err => {
           console.error("載入失敗：", err);
-          document.getElementById('recordsContainer').innerHTML = '<div class="card" style="color:#ef4444;">⚠️ 讀取失敗！請確認 GAS 已部署為「新版本」。</div>';
+          document.getElementById('recordsContainer').innerHTML = '<div class="card" style="color:#ef4444;">⚠️ 讀取失敗！請刷新網頁重試。</div>';
         });
     }
 
