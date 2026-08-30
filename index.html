@@ -12,7 +12,7 @@
       --primary: #1e3a8a;
       --bg: #f8fafc;
       --card-bg: #ffffff;
-      --border: #e2e8f0;
+      --border: #cbd5e1;
       --text: #0f172a;
       --text-sub: #64748b;
     }
@@ -69,6 +69,7 @@
       100% { transform: rotate(360deg); }
     }
 
+    /* 🚨 動態待補充看板 */
     .issue-notice-box {
       background: #fef2f2;
       border: 1px solid #fca5a5;
@@ -101,7 +102,7 @@
     .step-nav {
       display: flex;
       gap: 6px;
-      margin-bottom: 12px;
+      margin-bottom: 14px;
       overflow-x: auto;
     }
     .step-btn {
@@ -111,10 +112,11 @@
       color: #64748b;
       border: none;
       border-radius: 8px;
-      font-size: 0.82rem;
+      font-size: 0.88rem;
       font-weight: bold;
       text-align: center;
       transition: all 0.2s ease;
+      white-space: nowrap;
     }
     .step-btn.active {
       background: var(--primary);
@@ -125,33 +127,52 @@
     .tab-content { display: none; }
     .tab-content.active { display: block; }
 
-    .category2-title {
-      font-size: 1rem;
+    /* 🎨 全新：大標題與外框群組容器 (Group Box) */
+    .group-box {
+      border: 2px solid #cbd5e1;
+      border-radius: 12px;
+      padding: 12px;
+      margin-bottom: 18px;
+      background: #ffffff;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.03);
+    }
+
+    .group-header {
+      font-size: 1.15rem;
+      font-weight: 800;
+      padding: 8px 12px;
+      border-radius: 8px;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      letter-spacing: 0.5px;
+    }
+
+    /* 子分區（如 IV 包）樣式 */
+    .subgroup-header {
+      font-size: 1.02rem;
       font-weight: bold;
-      margin: 14px 0 8px 4px;
+      color: #475569;
+      border-bottom: 2px dashed #cbd5e1;
+      padding-bottom: 4px;
+      margin: 12px 0 8px 2px;
       display: flex;
       align-items: center;
       gap: 6px;
     }
 
     .item-card {
-      border-radius: 10px;
-      padding: 12px;
-      margin-bottom: 10px;
-      border: 1px solid var(--border);
-      box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+      border-radius: 8px;
+      padding: 10px 12px;
+      margin-bottom: 8px;
+      border: 1px solid #e2e8f0;
+      background: #ffffff;
     }
     .item-header { display: flex; justify-content: space-between; align-items: center; }
-    .item-name { font-weight: 600; font-size: 0.95rem; }
+    .item-name { font-weight: 600; font-size: 0.95rem; color: #1e293b; }
     .item-hint { font-size: 0.8rem; color: var(--text-sub); margin-top: 2px; }
-    .item-input { margin-top: 8px; }
-
-    .badge-tag {
-      font-size: 0.75rem;
-      padding: 2px 6px;
-      border-radius: 4px;
-      font-weight: bold;
-    }
+    .item-input { margin-top: 6px; }
 
     .submit-bar {
       position: fixed;
@@ -343,7 +364,6 @@
       }
     }
 
-    // 隊員直接結案
     function resolveIssueDirectly(issueId) {
       const selectedUser = document.getElementById('userSelect').value;
       if (!confirm("確認已完成補充並結案？")) return;
@@ -374,27 +394,58 @@
       });
     }
 
-    function getCategoryStyle(cat1, cat2) {
+    // 🎨 特殊套組視覺風格配置（放大字體、對應主題顏色與外框）
+    function getGroupTheme(cat1, cat2) {
       cat1 = String(cat1 || '');
       cat2 = String(cat2 || '');
 
-      if (cat1.includes('第一部') || cat2.includes('急救包') || cat2.includes('器材包')) {
-        return { bg: '#fff1f2', border: '#fca5a5', tagBg: '#fee2e2', tagColor: '#991b1b' };
-      } else if (cat2.includes('攜帶氧')) {
-        return { bg: '#f0f9ff', border: '#7dd3fc', tagBg: '#bae6fd', tagColor: '#0369a1' };
-      } else if (cat2.includes('ZOLL')) {
-        return { bg: '#fffbeb', border: '#fcd34d', tagBg: '#fef3c7', tagColor: '#b45309' };
+      if (cat2.includes('急救包')) {
+        return {
+          icon: '🎒',
+          headerBg: '#dc2626',
+          headerColor: '#ffffff',
+          borderColor: '#fca5a5',
+          boxBg: '#fff5f5'
+        };
+      } else if (cat2.includes('攜帶氧') || cat2.includes('氧氣')) {
+        return {
+          icon: '🫁',
+          headerBg: '#0284c7',
+          headerColor: '#ffffff',
+          borderColor: '#7dd3fc',
+          boxBg: '#f0f9ff'
+        };
+      } else if (cat2.includes('ZOLL') || cat2.includes('電擊') || cat2.includes('心導管')) {
+        return {
+          icon: '⚡',
+          headerBg: '#d97706',
+          headerColor: '#ffffff',
+          borderColor: '#fcd34d',
+          boxBg: '#fffbeb'
+        };
       } else if (cat1.includes('第三部') || cat2.includes('產包') || cat2.includes('燒燙傷') || cat2.includes('大傷')) {
-        return { bg: '#faf5ff', border: '#d8b4fe', tagBg: '#e9d5ff', tagColor: '#6b21a8' };
+        return {
+          icon: '📦',
+          headerBg: '#7e22ce',
+          headerColor: '#ffffff',
+          borderColor: '#d8b4fe',
+          boxBg: '#faf5ff'
+        };
       } else {
-        return { bg: '#f8fafc', border: '#cbd5e1', tagBg: '#e2e8f0', tagColor: '#334155' };
+        return {
+          icon: '📋',
+          headerBg: '#334155',
+          headerColor: '#ffffff',
+          borderColor: '#cbd5e1',
+          boxBg: '#f8fafc'
+        };
       }
     }
 
     function getShortName(name) {
-      if (name.includes('第一部')) return '1. 器材包';
-      if (name.includes('第二部')) return '2. 車上裝備';
-      if (name.includes('第三部')) return '3. 特殊套組';
+      if (name.includes('第一部')) return '1. 急救包/包紮裝備';
+      if (name.includes('第二部')) return '2. 車上固定裝備';
+      if (name.includes('第三部')) return '3. 特殊急救套組';
       return name;
     }
 
@@ -432,27 +483,40 @@
         const categories2 = [...new Set(cat1Items.map(i => i.Category_2))];
 
         categories2.forEach(cat2 => {
-          const style = getCategoryStyle(cat1, cat2);
+          const theme = getGroupTheme(cat1, cat2);
 
-          const cat2Title = document.createElement('div');
-          cat2Title.className = 'category2-title';
-          cat2Title.innerHTML = `<span class="badge-tag" style="background:${style.tagBg}; color:${style.tagColor};">${cat2 || '一般'}</span>`;
-          tabContent.appendChild(cat2Title);
+          // 建立外框包覆容器 (Group Box)
+          const groupBox = document.createElement('div');
+          groupBox.className = 'group-box';
+          groupBox.style.borderColor = theme.borderColor;
+          groupBox.style.backgroundColor = theme.boxBg;
+
+          // 建立大字體 Header Banner
+          const groupHeader = document.createElement('div');
+          groupHeader.className = 'group-header';
+          groupHeader.style.backgroundColor = theme.headerBg;
+          groupHeader.style.color = theme.headerColor;
+          groupHeader.innerHTML = `
+            <span>${theme.icon} ${cat2 || '一般裝備'}</span>
+            <span style="font-size:0.8rem; font-weight:normal; opacity:0.9;">整組檢查</span>
+          `;
+          groupBox.appendChild(groupHeader);
 
           const cat2Items = cat1Items.filter(i => i.Category_2 === cat2);
+
           cat2Items.forEach(item => {
             const isMandatory = item.Input_Type === 'mandatory_number';
             const itemCard = document.createElement('div');
             itemCard.className = 'item-card';
-            itemCard.style.backgroundColor = style.bg;
-            itemCard.style.borderColor = isMandatory ? '#f59e0b' : style.border;
-            if (isMandatory) itemCard.style.borderLeft = '5px solid #f59e0b';
+            if (isMandatory) {
+              itemCard.style.borderLeft = '5px solid #f59e0b';
+            }
 
             let inputHtml = '';
             if (isMandatory) {
-              inputHtml = `<input type="tel" inputmode="numeric" pattern="[0-9]*" id="input_${item.Item_ID}" placeholder="請輸入數值" required>`;
+              inputHtml = `<input type="tel" inputmode="numeric" pattern="[0-9]*" id="input_${item.Item_ID}" placeholder="請填寫數據（必填）" required>`;
             } else if (item.Input_Type === 'optional_qty') {
-              inputHtml = `<input type="tel" inputmode="numeric" pattern="[0-9]*" id="input_${item.Item_ID}" value="${item.Standard_Qty || 0}" style="width: 80px; display:inline-block;"> 包/個 (預設齊全)`;
+              inputHtml = `<input type="tel" inputmode="numeric" pattern="[0-9]*" id="input_${item.Item_ID}" value="${item.Standard_Qty || 0}" style="width: 80px; display:inline-block; font-weight:bold; color:#1e3a8a;"> 包/個 (預設齊全)`;
             } else {
               inputHtml = `<select id="input_${item.Item_ID}"><option value="正常">✅ 正常 / 完整</option><option value="異常">❌ 異常 / 缺失</option></select>`;
             }
@@ -460,7 +524,7 @@
             itemCard.innerHTML = `
               <div class="item-header">
                 <span class="item-name">${item.Item_Name}</span>
-                ${isMandatory ? '<span style="color:#d97706; font-size:0.75rem; font-weight:bold;">⚠️ 必填數據</span>' : ''}
+                ${isMandatory ? '<span style="color:#d97706; font-size:0.78rem; font-weight:bold;">⚠️ 關鍵數據</span>' : ''}
               </div>
               <div class="item-hint">${item.Item_Hint || ''}</div>
               <div class="item-input">
@@ -468,8 +532,10 @@
                 <input type="text" id="note_${item.Item_ID}" placeholder="未補齊或異常原因（選填）" style="margin-top: 6px; font-size: 0.85rem;">
               </div>
             `;
-            tabContent.appendChild(itemCard);
+            groupBox.appendChild(itemCard);
           });
+
+          tabContent.appendChild(groupBox);
         });
 
         tabsContainer.appendChild(tabContent);
