@@ -28,6 +28,9 @@
       border-radius: 12px;
       margin-bottom: 12px;
       box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
     }
     .header h1 { margin: 0; font-size: 1.25rem; }
     .header p { margin: 4px 0 0 0; font-size: 0.8rem; opacity: 0.85; }
@@ -154,13 +157,14 @@
     <div>⏳ 載入分隊資料與清單中...</div>
   </div>
 
-  <div class="header" style="display:flex; justify-content:space-between; align-items:center;">
-  <div>
-    <h1 style="margin:0;">🚑 每日救護車檢查</h1>
-    <p style="margin:4px 0 0 0;">接續式流程：完成本頁後請按「下一步」</p>
+  <div class="header">
+    <div>
+      <h1>🚑 每日救護車檢查</h1>
+      <p>接續式流程：完成本頁後請按下方「下一步」</p>
+    </div>
+    <a href="admin.html" style="color:white; font-size:0.8rem; text-decoration:none; background:rgba(255,255,255,0.2); padding:6px 10px; border-radius:6px; font-weight:bold;">⚙️ 幹部簽核</a>
   </div>
-  <a href="admin.html" style="color:white; font-size:0.8rem; text-decoration:none; background:rgba(255,255,255,0.2); padding:6px 10px; border-radius:6px;">⚙️ 幹部簽核</a>
-</div>
+
   <div class="form-group">
     <label>選擇清點車輛：</label>
     <select id="vehicleSelect" onchange="renderItems()"></select>
@@ -299,9 +303,10 @@
 
             let inputHtml = '';
             if (isMandatory) {
-              inputHtml = `<input type="number" id="input_${item.Item_ID}" placeholder="請輸入數值" required>`;
+              // inputmode="numeric" 與 pattern="[0-9]*" 確保手機優先開啟九宮格數字鍵盤
+              inputHtml = `<input type="number" inputmode="numeric" pattern="[0-9]*" id="input_${item.Item_ID}" placeholder="請輸入數值" required>`;
             } else if (item.Input_Type === 'optional_qty') {
-              inputHtml = `<input type="number" id="input_${item.Item_ID}" value="${item.Standard_Qty || 0}" style="width: 80px; display:inline-block;"> 包/個 (預設齊全)`;
+              inputHtml = `<input type="number" inputmode="numeric" pattern="[0-9]*" id="input_${item.Item_ID}" value="${item.Standard_Qty || 0}" style="width: 80px; display:inline-block;"> 包/個 (預設齊全)`;
             } else {
               inputHtml = `<select id="input_${item.Item_ID}"><option value="正常">✅ 正常 / 完整</option><option value="異常">❌ 異常 / 缺失</option></select>`;
             }
