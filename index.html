@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>救護車輛與裝備晨間清點系統</title>
+  <style>
+    :root {
+      --primary: #1e3a8a;
+      --bg: #f8fafc;
+      --card-bg: #ffffff;
+      --border: #e2e8f0;
+      --text: #0f172a;
+      --text-sub: #64748b;
+      --danger: #ef4444;
+      --success: #10b981;
+    }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background-color: var(--bg);
+      color: var(--text);
+      margin: 0;
+      padding: 12px;
+      padding-bottom: 80px;
+    }
+    .header {
+      background: var(--primary);
+      color: white;
+      padding: 16px;
+      border-radius: 12px;
+      margin-bottom: 16px;
+      box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+    }
+    .header h1 { margin: 0; font-size: 1.25rem; }
+    .header p { margin: 4px 0 0 0; font-size: 0.85rem; opacity: 0.8; }
+    
+    .form-group {
+      background: var(--card-bg);
+      padding: 14px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      margin-bottom: 12px;
+    }
+    label { font-weight: bold; display: block; margin-bottom: 6px; font-size: 0.95rem; }
+    select, input, textarea {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      box-sizing: border-box;
+      font-size: 1rem;
+    }
+    
+    .section-title {
+      font-size: 1.1rem;
+      font-weight: bold;
+      margin: 18px 0 8px 4px;
+      color: var(--primary);
+      border-left: 4px solid var(--primary);
+      padding-left: 8px;
+    }
+
+    .item-card {
+      background: var(--card-bg);
+      border-radius: 10px;
+      padding: 12px;
+      margin-bottom: 10px;
+      border: 1px solid var(--border);
+    }
+    .item-card.mandatory { border-left: 4px solid #f59e0b; }
+    .item-header { display: flex; justify-content: space-between; align-items: center; }
+    .item-name { font-weight: 600; font-size: 1rem; }
+    .item-hint { font-size: 0.8rem; color: var(--text-sub); margin-top: 2px; }
+    .item-input { margin-top: 8px; }
+
+    .submit-bar {
+      position: fixed;
+      bottom: 0; left: 0; right: 0;
+      background: white;
+      padding: 12px 16px;
+      border-top: 1px solid var(--border);
+      box-shadow: 0 -4px 6px -1px rgba(0,0,0,0.05);
+    }
+    .btn-submit {
+      width: 100%;
+      background: var(--primary);
+      color: white;
+      border: none;
+      padding: 14px;
+      border-radius: 10px;
+      font-size: 1.1rem;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    .btn-submit:disabled { background: #94a3b8; }
+    .loading-overlay {
+      position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(255,255,255,0.9);
+      display: flex; flex-direction: column;
+      justify-content: center; align-items: center;
+      z-index: 999;
+    }
+  </style>
+</head>
+<body>
+
+  <div id="loading" class="loading-overlay">
+    <div>⏳ 載入分隊資料與項目中...</div>
+  </div>
+
+  <div class="header">
+    <h1>🚑 救護車輛與裝備晨間清點</h1>
+    <p>預設全數齊全，請確實輸入電量/氣壓與缺失備註</p>
+  </div>
+
+  <div class="form-group">
+    <label>選擇清點車輛：</label>
+    <select id="vehicleSelect" onchange="renderItems()"></select>
+  </div>
+
+  <div class="form-group">
+    <label>清點同仁（Checker）：</label>
+    <select id="userSelect"></select>
+  </div>
+
+  <div id="itemsContainer"></div>
+
+  <div class="form-group" style="margin-top: 16px;">
+    <label>整體狀況備註（選填）：</label>
+    <textarea id="generalNote" rows="2" placeholder="例：車載氧瓶蓋略緊，已潤滑處理..."></textarea>
+  </div>
+
+  <div class="submit-bar">
+    <button class="btn-submit" onclick="submitCheck()">🚀 完成並送出檢查單</button>
+  </div>
+
+  <script>
+    // ⚠️ 請將下方的網址替換成您剛才部署發布的 Web 應用程式 URL
+    const GAS_API_URL = "https://script.google.com/macros/s/AKfycbyBXwfnayjato5donoxrdOUVtv45EihyOU1tYxq8Nix2DsB6AtRBEP1pu4ohc4lrRs_0A/exec";
+
+    let initData = { vehicles: [], users: [], items: [] };
+
+    window.onload = function() {
+      fetchInitData();
+    };
+
+    function fetchInitData() {
+      fetch(`${GAS_API_URL}?action=getInitData`)
+        .then(res => res.json())
+        .then(res => {
+          if(res.success) {
+            initData = res.data;
+            populateDropdowns();
+            renderItems();
+            document.getElementById('loading').style.display = 'none';
+          } else {
+            alert("資料載入失敗：" + res.error);
+          }
+        })
+        .catch(err => {
+          alert("連線失敗，請確認 API 網址是否填寫正確！");
+          console.error(err);
+        });
+    }
+
+    function populateDropdowns() {
+      const vSelect = document.getElementById('vehicleSelect');
+      vSelect.innerHTML = initData.vehicles.map(v => `<option value="${v.Vehicle_Name}">${v.Vehicle_Name}</option>`).join('');
+
+      const uSelect = document.getElementById('userSelect');
+      uSelect.innerHTML = initData.users.map(u => `<option value="${u.User_Name}">${u.User_Name}</option>`).join('');
+    }
+
+    function renderItems() {
+      const selectedVehicle = document.getElementById('vehicleSelect').value;
+      const container = document.getElementById('itemsContainer');
+      container.innerHTML = '';
+
+      // 過濾適用車輛
+      const filteredItems = initData.items.filter(item => {
+        const scope = item.Vehicle_Scope || 'ALL';
+        return scope === 'ALL' || scope.includes(selectedVehicle);
+      });
+
+      // 依 Category_1 群組化
+      const categories = [...new Set(filteredItems.map(i => i.Category_1))];
+
+      categories.forEach(cat => {
+        const catTitle = document.createElement('div');
+        catTitle.className = 'section-title';
+        catTitle.innerText = cat;
+        container.appendChild(catTitle);
+
+        const catItems = filteredItems.filter(i => i.Category_1 === cat);
+        catItems.forEach(item => {
+          const isMandatory = item.Input_Type === 'mandatory_number';
+          const itemCard = document.createElement('div');
+          itemCard.className = `item-card ${isMandatory ? 'mandatory' : ''}`;
+
+          let inputHtml = '';
+          if (isMandatory) {
+            inputHtml = `<input type="number" id="input_${item.Item_ID}" placeholder="請輸入數值" required>`;
+          } else if (item.Input_Type === 'optional_qty') {
+            inputHtml = `<input type="number" id="input_${item.Item_ID}" value="${item.Standard_Qty}" style="width: 80px; display:inline-block;"> 包/個 (預設齊全)`;
+          } else {
+            inputHtml = `<select id="input_${item.Item_ID}"><option value="正常">✅ 正常 / 完整</option><option value="異常">❌ 異常 / 缺失</option></select>`;
+          }
+
+          itemCard.innerHTML = `
+            <div class="item-header">
+              <span class="item-name">${item.Item_Name}</span>
+              ${isMandatory ? '<span style="color:#f59e0b; font-size:0.8rem; font-weight:bold;">必填數據</span>' : ''}
+            </div>
+            <div class="item-hint">${item.Item_Hint || ''}</div>
+            <div class="item-input">
+              ${inputHtml}
+              <input type="text" id="note_${item.Item_ID}" placeholder="未補齊或異常原因（選填）" style="margin-top: 6px; font-size: 0.85rem;">
+            </div>
+          `;
+          container.appendChild(itemCard);
+        });
+      });
+    }
+
+    function submitCheck() {
+      const selectedVehicle = document.getElementById('vehicleSelect').value;
+      const selectedUser = document.getElementById('userSelect').value;
+      
+      const filteredItems = initData.items.filter(item => {
+        const scope = item.Vehicle_Scope || 'ALL';
+        return scope === 'ALL' || scope.includes(selectedVehicle);
+      });
+
+      let payloadItems = [];
+      let missingMandatory = false;
+
+      filteredItems.forEach(item => {
+        const valInput = document.getElementById(`input_${item.Item_ID}`);
+        const noteInput = document.getElementById(`note_${item.Item_ID}`);
+        const val = valInput ? valInput.value : '';
+        const note = noteInput ? noteInput.value : '';
+
+        if (item.Input_Type === 'mandatory_number' && !val) {
+          missingMandatory = true;
+        }
+
+        let isAbnormal = false;
+        if (item.Input_Type === 'mandatory_number') {
+          if (parseFloat(val) < parseFloat(item.Warning_Min)) isAbnormal = true;
+        } else if (item.Input_Type === 'optional_qty') {
+          if (parseFloat(val) < parseFloat(item.Warning_Min)) isAbnormal = true;
+        } else if (val === '異常') {
+          isAbnormal = true;
+        }
+
+        payloadItems.push({
+          itemId: item.Item_ID,
+          itemName: item.Item_Name,
+          inputValue: val,
+          standardQty: item.Standard_Qty || '',
+          isAbnormal: isAbnormal,
+          itemNote: note
+        });
+      });
+
+      if (missingMandatory) {
+        alert("⚠️ 請確實填寫所有電量與氣壓數值！");
+        return;
+      }
+
+      const payload = {
+        vehicleName: selectedVehicle,
+        checker: selectedUser,
+        generalNote: document.getElementById('generalNote').value,
+        items: payloadItems
+      };
+
+      document.getElementById('loading').style.display = 'flex';
+
+      fetch(GAS_API_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain' },
+        body: JSON.stringify({ action: 'submitCheck', payload: payload })
+      })
+      .then(res => res.json())
+      .then(res => {
+        document.getElementById('loading').style.display = 'none';
+        if (res.success) {
+          alert("✅ 晨間清點送出成功！單號：" + res.checkId);
+          location.reload();
+        } else {
+          alert("❌ 送出失敗：" + res.error);
+        }
+      })
+      .catch(err => {
+        document.getElementById('loading').style.display = 'none';
+        alert("網路連線錯誤，請重試！");
+      });
+    }
+  </script>
+</body>
+</html>
