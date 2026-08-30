@@ -3,6 +3,9 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+  <meta http-equiv="Pragma" content="no-cache" />
+  <meta http-equiv="Expires" content="0" />
   <title>每日救護車檢查</title>
   <style>
     :root {
@@ -64,6 +67,33 @@
     @keyframes spin {
       0% { transform: rotate(0deg); }
       100% { transform: rotate(360deg); }
+    }
+
+    /* 待補充/更換動態看板樣式 */
+    .issue-notice-box {
+      background: #fef2f2;
+      border: 1px solid #fca5a5;
+      border-radius: 10px;
+      padding: 12px;
+      margin-bottom: 12px;
+    }
+    .issue-notice-title {
+      font-weight: bold;
+      color: #991b1b;
+      font-size: 0.92rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 6px;
+    }
+    .issue-item-tag {
+      background: #ffffff;
+      border-left: 4px solid #ef4444;
+      padding: 8px 10px;
+      margin-top: 6px;
+      border-radius: 6px;
+      font-size: 0.85rem;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.03);
     }
 
     .step-nav {
@@ -186,7 +216,16 @@
 
   <div class="form-group">
     <label>選擇清點車輛：</label>
-    <select id="vehicleSelect" onchange="renderItems()"></select>
+    <select id="vehicleSelect" onchange="onVehicleChange()"></select>
+  </div>
+
+  <!-- 🚨 動態待補充 / 更換器材看板 -->
+  <div id="issueNoticeBox" class="issue-notice-box">
+    <div class="issue-notice-title">
+      <span>🚨 本車目前待補充 / 更換器材：</span>
+      <span id="issueNoticeCount" style="background:#ef4444; color:white; font-size:0.75rem; padding:2px 8px; border-radius:12px;">0 項</span>
+    </div>
+    <div id="issueNoticeList"></div>
   </div>
 
   <div class="form-group">
@@ -210,7 +249,7 @@
   <script>
     const GAS_API_URL = "https://script.google.com/macros/s/AKfycbyBXwfnayjato5donoxrdOUVtv45EihyOU1tYxq8Nix2DsB6AtRBEP1pu4ohc4lrRs_0A/exec";
 
-    let initData = { vehicles: [], users: [], items: [] };
+    let initData = { vehicles: [], users: [], items: [], issues: [] };
     let currentSessionToken = "";
     let currentStep = 0;
     let totalSteps = 0;
@@ -221,7 +260,7 @@
     };
 
     function fetchInitData() {
-      fetch(`${GAS_API_URL}?action=getInitData`)
+      fetch(`${GAS_API_URL}?action=getInitData&_t=${Date.now()}`)
         .then(res => res.json())
         .then(res => {
           if(res.success) {
@@ -229,6 +268,7 @@
             currentSessionToken = res.data.sessionToken || "";
             populateDropdowns();
             renderItems();
+            renderVehicleIssues(); // 渲染待補充清單
             document.getElementById('loading').style.display = 'none';
           } else {
             alert("資料載入失敗：" + res.error);
@@ -236,7 +276,7 @@
         })
         .catch(err => {
           console.error("詳細錯誤資訊：", err);
-          alert("資料載入發生錯誤，請查看開發者工具 (F12) 紀錄！");
+          alert("網路或載入發生錯誤，請重新整理網頁！");
         });
     }
 
@@ -246,6 +286,58 @@
 
       const uSelect = document.getElementById('userSelect');
       uSelect.innerHTML = initData.users.map(u => `<option value="${u.User_Name}">${u.User_Name}</option>`).join('');
+    }
+
+    function onVehicleChange() {
+      renderItems();
+      renderVehicleIssues();
+    }
+
+    // 渲染「本車待補充/更換器材清單」
+    function renderVehicleIssues() {
+      const selectedVehicle = String(document.getElementById('vehicleSelect').value || '');
+      const box = document.getElementById('issueNoticeBox');
+      const listContainer = document.getElementById('issueNoticeList');
+      const countBadge = document.getElementById('issueNoticeCount');
+
+      if (!initData.issues || initData.issues.length === 0) {
+        box.style.background = '#f0fdf4';
+        box.style.borderColor = '#86efac';
+        countBadge.style.background = '#10b981';
+        countBadge.innerText = '0 項';
+        listContainer.innerHTML = '<div style="color:#166534; font-size:0.85rem; margin-top:4px;">🎉 本車目前裝備齊全，無待補充或報欠項目！</div>';
+        return;
+      }
+
+      // 篩選選定車輛的待處置缺失
+      const vehicleIssues = initData.issues.filter(i => String(i.Vehicle_Name).trim() === selectedVehicle);
+
+      if (vehicleIssues.length === 0) {
+        box.style.background = '#f0fdf4';
+        box.style.borderColor = '#86efac';
+        countBadge.style.background = '#10b981';
+        countBadge.innerText = '0 項';
+        listContainer.innerHTML = `<div style="color:#166534; font-size:0.85rem; margin-top:4px;">🎉 ${selectedVehicle} 車目前無待補充或報欠項目！</div>`;
+      } else {
+        box.style.background = '#fef2f2';
+        box.style.borderColor = '#fca5a5';
+        countBadge.style.background = '#ef4444';
+        countBadge.innerText = `${vehicleIssues.length} 項`;
+
+        listContainer.innerHTML = vehicleIssues.map(i => {
+          const name = i.Item_Name || i.itemName || '器材項目';
+          const val = i.Actual_Qty !== undefined ? i.Actual_Qty : '';
+          const std = i.Standard_Qty ? `(標準:${i.Standard_Qty})` : '';
+          const reason = i.Unresolved_Reason || '待處置';
+
+          return `
+            <div class="issue-item-tag">
+              <strong style="color:#991b1b;">• ${name}</strong>：現有數值 <span style="font-weight:bold; color:#ef4444;">${val}</span> ${std}
+              <div style="color:#64748b; font-size:0.78rem; margin-top:2px;">說明/原因：${reason}</div>
+            </div>
+          `;
+        }).join('');
+      }
     }
 
     function getCategoryStyle(cat1, cat2) {
