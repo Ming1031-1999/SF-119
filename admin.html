@@ -93,29 +93,69 @@
 
   <script>
     const GAS_API_URL = "https://script.google.com/macros/s/AKfycbyBXwfnayjato5donoxrdOUVtv45EihyOU1tYxq8Nix2DsB6AtRBEP1pu4ohc4lrRs_0A/exec";
-    
     const MANAGER_PIN = "1199"; 
+    
     let allHistoricalRecords = [];
+    let itemLookupMap = {}; // 器材 ID -> 中文名稱對照表
 
     window.onload = function() {
-      loadInitData();
-      loadPendingData();
+      // 確保先載入 Item_List 的中文名稱對照表，再讀取待簽核紀錄
+      loadInitData().then(() => {
+        loadPendingData();
+      });
     };
 
-    // 強效器材名稱提取器（避免標頭命名不吻合）
+    function loadInitData() {
+      return fetch(`${GAS_API_URL}?action=getInitData`)
+        .then(res => res.json())
+        .then(res => {
+          if (res.success && res.data) {
+            // 建立 Item_ID 對應 Item_Name 的對照字典
+            if (res.data.items) {
+              res.data.items.forEach(i => {
+                if (i.Item_ID) {
+                  itemLookupMap[String(i.Item_ID).trim()] = i.Item_Name;
+                }
+              });
+            }
+
+            // 填入幹部選單
+            if (res.data.users) {
+              const select = document.getElementById('reviewerSelect');
+              const reviewers = res.data.users.filter(u => u.Role === 'reviewer' || u.Role === 'admin');
+              const list = reviewers.length > 0 ? reviewers : res.data.users;
+              select.innerHTML = '<option value="">-- 請選擇簽核幹部 --</option>' + 
+                list.map(u => `<option value="${u.User_Name}">${u.User_Name}</option>`).join('');
+            }
+          }
+        })
+        .catch(err => console.error("載入基礎資料失敗", err));
+    }
+
+    // 核心名稱解析：優先使用 Item_ID 反查中文名稱
     function parseItemName(d) {
       if (!d) return "器材項目";
+      
+      // 1. 優先用 Item_ID 向 Item_List 反查（最準確，不懼怕舊資料空白）
+      const itemId = String(d.Item_ID || d.itemId || d.ItemID || '').trim();
+      if (itemId && itemLookupMap[itemId]) {
+        return itemLookupMap[itemId];
+      }
+
+      // 2. 次要備用：嘗試讀取物件屬性中的名稱
       for (let key in d) {
         const cleanKey = key.toLowerCase().replace(/[^a-z0-9]/g, '');
         if (cleanKey === 'itemname' || cleanKey === 'item' || key.includes('項目') || key.includes('名稱') || key.includes('器材')) {
-          if (d[key]) return d[key];
+          if (d[key] && String(d[key]).trim() !== '' && d[key] !== 'undefined') return d[key];
         }
       }
+
       const values = Object.values(d);
-      return values[2] || d.Item_Name || d.itemName || "器材項目";
+      if (values[2] && String(values[2]).trim() !== '' && values[2] !== 'undefined') return values[2];
+
+      return "未知器材";
     }
 
-    // 強效填寫值提取器
     function parseInputValue(d) {
       if (!d) return "";
       for (let key in d) {
@@ -126,20 +166,6 @@
       }
       const values = Object.values(d);
       return values[3] !== undefined ? values[3] : (d.Input_Value || d.inputValue || "");
-    }
-
-    function loadInitData() {
-      fetch(`${GAS_API_URL}?action=getInitData`)
-        .then(res => res.json())
-        .then(res => {
-          if (res.success && res.data.users) {
-            const select = document.getElementById('reviewerSelect');
-            const reviewers = res.data.users.filter(u => u.Role === 'reviewer' || u.Role === 'admin');
-            const list = reviewers.length > 0 ? reviewers : res.data.users;
-            select.innerHTML = '<option value="">-- 請選擇簽核幹部 --</option>' + 
-              list.map(u => `<option value="${u.User_Name}">${u.User_Name}</option>`).join('');
-          }
-        });
     }
 
     function loadPendingData() {
