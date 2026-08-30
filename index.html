@@ -165,6 +165,9 @@
     <a href="admin.html" style="color:white; font-size:0.8rem; text-decoration:none; background:rgba(255,255,255,0.2); padding:6px 10px; border-radius:6px; font-weight:bold;">⚙️ 幹部簽核</a>
   </div>
 
+  <!-- Honeypot 機器人隱藏陷阱欄位 (真人看不到，機器人填寫會被抓包) -->
+  <input type="text" id="website_hp" style="display:none !important;" tabindex="-1" autocomplete="off">
+
   <div class="form-group">
     <label>選擇清點車輛：</label>
     <select id="vehicleSelect" onchange="renderItems()"></select>
@@ -192,6 +195,7 @@
     const GAS_API_URL = "https://script.google.com/macros/s/AKfycbyBXwfnayjato5donoxrdOUVtv45EihyOU1tYxq8Nix2DsB6AtRBEP1pu4ohc4lrRs_0A/exec";
 
     let initData = { vehicles: [], users: [], items: [] };
+    let currentSessionToken = ""; // 儲存動態安全 Token
     let currentStep = 0;
     let totalSteps = 0;
     let categories1List = [];
@@ -206,6 +210,7 @@
         .then(res => {
           if(res.success) {
             initData = res.data;
+            currentSessionToken = res.data.sessionToken || "";
             populateDropdowns();
             renderItems();
             document.getElementById('loading').style.display = 'none';
@@ -303,7 +308,6 @@
 
             let inputHtml = '';
             if (isMandatory) {
-              // 改為 type="tel" 強制 iOS 喚起大按鈕電話/九宮格數字鍵盤
               inputHtml = `<input type="tel" inputmode="numeric" pattern="[0-9]*" id="input_${item.Item_ID}" placeholder="請輸入數值" required>`;
             } else if (item.Input_Type === 'optional_qty') {
               inputHtml = `<input type="tel" inputmode="numeric" pattern="[0-9]*" id="input_${item.Item_ID}" value="${item.Standard_Qty || 0}" style="width: 80px; display:inline-block;"> 包/個 (預設齊全)`;
@@ -484,7 +488,12 @@
       fetch(GAS_API_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'text/plain' },
-        body: JSON.stringify({ action: 'submitCheck', payload: payload })
+        body: JSON.stringify({
+          action: 'submitCheck',
+          sessionToken: currentSessionToken,
+          honeypot: document.getElementById('website_hp').value, // 傳送陷阱欄位值
+          payload: payload
+        })
       })
       .then(res => res.json())
       .then(res => {
@@ -493,7 +502,7 @@
           alert("✅ 每日檢查單送出成功！單號：" + res.checkId);
           location.reload();
         } else {
-          alert("❌ 送出失敗：" + res.error);
+          alert(res.error);
         }
       })
       .catch(err => {
