@@ -12,8 +12,6 @@
       --border: #e2e8f0;
       --text: #0f172a;
       --text-sub: #64748b;
-      --danger: #ef4444;
-      --success: #10b981;
     }
     body {
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
@@ -21,78 +19,115 @@
       color: var(--text);
       margin: 0;
       padding: 12px;
-      padding-bottom: 80px;
+      padding-bottom: 90px;
     }
     .header {
       background: var(--primary);
       color: white;
-      padding: 16px;
+      padding: 14px 16px;
       border-radius: 12px;
-      margin-bottom: 16px;
+      margin-bottom: 12px;
       box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
     }
-    .header h1 { margin: 0; font-size: 1.25rem; }
-    .header p { margin: 4px 0 0 0; font-size: 0.85rem; opacity: 0.8; }
+    .header h1 { margin: 0; font-size: 1.2rem; }
+    .header p { margin: 4px 0 0 0; font-size: 0.8rem; opacity: 0.85; }
     
     .form-group {
       background: var(--card-bg);
-      padding: 14px;
+      padding: 12px;
       border-radius: 10px;
       border: 1px solid var(--border);
       margin-bottom: 12px;
     }
-    label { font-weight: bold; display: block; margin-bottom: 6px; font-size: 0.95rem; }
+    label { font-weight: bold; display: block; margin-bottom: 6px; font-size: 0.9rem; }
     select, input, textarea {
       width: 100%;
       padding: 10px;
       border: 1px solid var(--border);
       border-radius: 8px;
       box-sizing: border-box;
-      font-size: 1rem;
+      font-size: 0.95rem;
     }
-    
-    .section-title {
-      font-size: 1.1rem;
+
+    /* 分頁導覽按鈕 */
+    .nav-tabs {
+      display: flex;
+      gap: 6px;
+      margin-bottom: 12px;
+      overflow-x: auto;
+      padding-bottom: 4px;
+    }
+    .tab-btn {
+      flex: 1;
+      padding: 10px 6px;
+      background: #e2e8f0;
+      color: #475569;
+      border: none;
+      border-radius: 8px;
+      font-size: 0.85rem;
       font-weight: bold;
-      margin: 18px 0 8px 4px;
-      color: var(--primary);
-      border-left: 4px solid var(--primary);
-      padding-left: 8px;
+      cursor: pointer;
+      white-space: nowrap;
+      text-align: center;
+      transition: all 0.2s ease;
+    }
+    .tab-btn.active {
+      background: var(--primary);
+      color: white;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.15);
+    }
+
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+
+    .category2-title {
+      font-size: 1rem;
+      font-weight: bold;
+      margin: 14px 0 8px 4px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
     }
 
     .item-card {
-      background: var(--card-bg);
       border-radius: 10px;
       padding: 12px;
       margin-bottom: 10px;
       border: 1px solid var(--border);
+      box-shadow: 0 1px 3px rgba(0,0,0,0.02);
     }
-    .item-card.mandatory { border-left: 4px solid #f59e0b; }
     .item-header { display: flex; justify-content: space-between; align-items: center; }
-    .item-name { font-weight: 600; font-size: 1rem; }
+    .item-name { font-weight: 600; font-size: 0.95rem; }
     .item-hint { font-size: 0.8rem; color: var(--text-sub); margin-top: 2px; }
     .item-input { margin-top: 8px; }
+
+    .badge-tag {
+      font-size: 0.75rem;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-weight: bold;
+    }
 
     .submit-bar {
       position: fixed;
       bottom: 0; left: 0; right: 0;
       background: white;
-      padding: 12px 16px;
+      padding: 10px 16px;
       border-top: 1px solid var(--border);
-      box-shadow: 0 -4px 6px -1px rgba(0,0,0,0.05);
+      box-shadow: 0 -4px 6px -1px rgba(0,0,0,0.08);
+      z-index: 100;
     }
     .btn-submit {
       width: 100%;
       background: var(--primary);
       color: white;
       border: none;
-      padding: 14px;
+      padding: 12px;
       border-radius: 10px;
-      font-size: 1.1rem;
+      font-size: 1rem;
       font-weight: bold;
       cursor: pointer;
     }
-    .btn-submit:disabled { background: #94a3b8; }
     .loading-overlay {
       position: fixed; top: 0; left: 0; right: 0; bottom: 0;
       background: rgba(255,255,255,0.9);
@@ -105,7 +140,7 @@
 <body>
 
   <div id="loading" class="loading-overlay">
-    <div>⏳ 載入分隊資料與項目中...</div>
+    <div>⏳ 載入分隊資料與清單中...</div>
   </div>
 
   <div class="header">
@@ -123,7 +158,11 @@
     <select id="userSelect"></select>
   </div>
 
-  <div id="itemsContainer"></div>
+  <!-- 分頁頁籤 -->
+  <div class="nav-tabs" id="tabsNav"></div>
+
+  <!-- 分頁內容容器 -->
+  <div id="tabsContainer"></div>
 
   <div class="form-group" style="margin-top: 16px;">
     <label>整體狀況備註（選填）：</label>
@@ -134,174 +173,239 @@
     <button class="btn-submit" onclick="submitCheck()">🚀 完成並送出檢查單</button>
   </div>
 
-<script>
-  const GAS_API_URL = "https://script.google.com/macros/s/AKfycbyBXwfnayjato5donoxrdOUVtv45EihyOU1tYxq8Nix2DsB6AtRBEP1pu4ohc4lrRs_0A/exec";
+  <script>
+    const GAS_API_URL = "https://script.google.com/macros/s/AKfycbyBXwfnayjato5donoxrdOUVtv45EihyOU1tYxq8Nix2DsB6AtRBEP1pu4ohc4lrRs_0A/exec";
 
-  let initData = { vehicles: [], users: [], items: [] };
+    let initData = { vehicles: [], users: [], items: [] };
 
-  window.onload = function() {
-    fetchInitData();
-  };
+    window.onload = function() {
+      fetchInitData();
+    };
 
-  function fetchInitData() {
-    fetch(`${GAS_API_URL}?action=getInitData`)
+    function fetchInitData() {
+      fetch(`${GAS_API_URL}?action=getInitData`)
+        .then(res => res.json())
+        .then(res => {
+          if(res.success) {
+            initData = res.data;
+            populateDropdowns();
+            renderItems();
+            document.getElementById('loading').style.display = 'none';
+          } else {
+            alert("資料載入失敗：" + res.error);
+          }
+        })
+        .catch(err => {
+          console.error("詳細錯誤資訊：", err);
+          alert("資料載入發生錯誤，請查看開發者工具 (F12) 紀錄！");
+        });
+    }
+
+    function populateDropdowns() {
+      const vSelect = document.getElementById('vehicleSelect');
+      vSelect.innerHTML = initData.vehicles.map(v => `<option value="${v.Vehicle_Name}">${v.Vehicle_Name}</option>`).join('');
+
+      const uSelect = document.getElementById('userSelect');
+      uSelect.innerHTML = initData.users.map(u => `<option value="${u.User_Name}">${u.User_Name}</option>`).join('');
+    }
+
+    // 依試算表配色映射風格
+    function getCategoryStyle(cat2) {
+      cat2 = String(cat2 || '');
+      if (cat2.includes('IV包')) {
+        return { bg: '#fff1f2', border: '#fca5a5', tagBg: '#fecdd3', tagColor: '#9f1239' }; // 粉紅/紅色
+      } else if (cat2.includes('攜帶氧')) {
+        return { bg: '#f0f9ff', border: '#7dd3fc', tagBg: '#bae6fd', tagColor: '#0369a1' }; // 天藍/水藍色
+      } else if (cat2.includes('ZOLL')) {
+        return { bg: '#fffbeb', border: '#fcd34d', tagBg: '#fef3c7', tagColor: '#b45309' }; // 黃/橘色
+      } else if (cat2.includes('產包') || cat2.includes('燒燙傷') || cat2.includes('大傷')) {
+        return { bg: '#faf5ff', border: '#d8b4fe', tagBg: '#e9d5ff', tagColor: '#6b21a8' }; // 紫色
+      } else if (cat2.includes('車上')) {
+        return { bg: '#f8fafc', border: '#cbd5e1', tagBg: '#e2e8f0', tagColor: '#334155' }; // 灰藍色
+      }
+      return { bg: '#ffffff', border: '#e2e8f0', tagBg: '#f1f5f9', tagColor: '#475569' };
+    }
+
+    function renderItems() {
+      const selectedVehicle = String(document.getElementById('vehicleSelect').value || '');
+      const tabsNav = document.getElementById('tabsNav');
+      const tabsContainer = document.getElementById('tabsContainer');
+      
+      tabsNav.innerHTML = '';
+      tabsContainer.innerHTML = '';
+
+      // 過濾車輛
+      const filteredItems = initData.items.filter(item => {
+        const scope = String(item.Vehicle_Scope || 'ALL').trim();
+        if (scope === 'ALL' || scope === '') return true;
+        return scope.split(',').map(s => s.trim()).includes(selectedVehicle);
+      });
+
+      // 提取 Category_1 作為三大分頁
+      const categories1 = [...new Set(filteredItems.map(i => i.Category_1))];
+
+      categories1.forEach((cat1, index) => {
+        if (!cat1) return;
+
+        // 簡化按鈕文字
+        let shortTabName = cat1;
+        if (cat1.includes('第一部')) shortTabName = '第一部分：器材包';
+        else if (cat1.includes('第二部')) shortTabName = '第二部分：車上器材耗材';
+        else if (cat1.includes('第三部')) shortTabName = '第三部分：特殊裝備套組';
+
+        // 1. 建立分頁按鈕
+        const btn = document.createElement('button');
+        btn.className = `tab-btn ${index === 0 ? 'active' : ''}`;
+        btn.innerText = shortTabName;
+        btn.onclick = () => switchTab(index);
+        tabsNav.appendChild(btn);
+
+        // 2. 建立分頁容器
+        const tabContent = document.createElement('div');
+        tabContent.className = `tab-content ${index === 0 ? 'active' : ''}`;
+        tabContent.id = `tabContent_${index}`;
+
+        const cat1Items = filteredItems.filter(i => i.Category_1 === cat1);
+        const categories2 = [...new Set(cat1Items.map(i => i.Category_2))];
+
+        // 依 Category_2 劃分卡片組
+        categories2.forEach(cat2 => {
+          const style = getCategoryStyle(cat2);
+
+          const cat2Title = document.createElement('div');
+          cat2Title.className = 'category2-title';
+          cat2Title.innerHTML = `<span class="badge-tag" style="background:${style.tagBg}; color:${style.tagColor};">${cat2 || '一般'}</span>`;
+          tabContent.appendChild(cat2Title);
+
+          const cat2Items = cat1Items.filter(i => i.Category_2 === cat2);
+          cat2Items.forEach(item => {
+            const isMandatory = item.Input_Type === 'mandatory_number';
+            const itemCard = document.createElement('div');
+            itemCard.className = 'item-card';
+            itemCard.style.backgroundColor = style.bg;
+            itemCard.style.borderColor = isMandatory ? '#f59e0b' : style.border;
+            if (isMandatory) itemCard.style.borderLeft = '5px solid #f59e0b';
+
+            let inputHtml = '';
+            if (isMandatory) {
+              inputHtml = `<input type="number" id="input_${item.Item_ID}" placeholder="請輸入數值" required>`;
+            } else if (item.Input_Type === 'optional_qty') {
+              inputHtml = `<input type="number" id="input_${item.Item_ID}" value="${item.Standard_Qty || 0}" style="width: 80px; display:inline-block;"> 包/個 (預設齊全)`;
+            } else {
+              inputHtml = `<select id="input_${item.Item_ID}"><option value="正常">✅ 正常 / 完整</option><option value="異常">❌ 異常 / 缺失</option></select>`;
+            }
+
+            itemCard.innerHTML = `
+              <div class="item-header">
+                <span class="item-name">${item.Item_Name}</span>
+                ${isMandatory ? '<span style="color:#d97706; font-size:0.75rem; font-weight:bold;">⚠️ 必填數據</span>' : ''}
+              </div>
+              <div class="item-hint">${item.Item_Hint || ''}</div>
+              <div class="item-input">
+                ${inputHtml}
+                <input type="text" id="note_${item.Item_ID}" placeholder="未補齊或異常原因（選填）" style="margin-top: 6px; font-size: 0.85rem;">
+              </div>
+            `;
+            tabContent.appendChild(itemCard);
+          });
+        });
+
+        tabsContainer.appendChild(tabContent);
+      });
+    }
+
+    function switchTab(activeIndex) {
+      const buttons = document.querySelectorAll('.tab-btn');
+      const contents = document.querySelectorAll('.tab-content');
+
+      buttons.forEach((btn, idx) => {
+        if (idx === activeIndex) btn.classList.add('active');
+        else btn.classList.remove('active');
+      });
+
+      contents.forEach((content, idx) => {
+        if (idx === activeIndex) content.classList.add('active');
+        else content.classList.remove('active');
+      });
+    }
+
+    function submitCheck() {
+      const selectedVehicle = String(document.getElementById('vehicleSelect').value || '');
+      const selectedUser = String(document.getElementById('userSelect').value || '');
+      
+      const filteredItems = initData.items.filter(item => {
+        const scope = String(item.Vehicle_Scope || 'ALL').trim();
+        if (scope === 'ALL' || scope === '') return true;
+        return scope.split(',').map(s => s.trim()).includes(selectedVehicle);
+      });
+
+      let payloadItems = [];
+      let missingMandatory = false;
+
+      filteredItems.forEach(item => {
+        const valInput = document.getElementById(`input_${item.Item_ID}`);
+        const noteInput = document.getElementById(`note_${item.Item_ID}`);
+        const val = valInput ? valInput.value : '';
+        const note = noteInput ? noteInput.value : '';
+
+        if (item.Input_Type === 'mandatory_number' && !val) {
+          missingMandatory = true;
+        }
+
+        let isAbnormal = false;
+        if (item.Input_Type === 'mandatory_number') {
+          if (parseFloat(val) < parseFloat(item.Warning_Min)) isAbnormal = true;
+        } else if (item.Input_Type === 'optional_qty') {
+          if (parseFloat(val) < parseFloat(item.Warning_Min)) isAbnormal = true;
+        } else if (val === '異常') {
+          isAbnormal = true;
+        }
+
+        payloadItems.push({
+          itemId: item.Item_ID,
+          itemName: item.Item_Name,
+          inputValue: val,
+          standardQty: item.Standard_Qty || '',
+          isAbnormal: isAbnormal,
+          itemNote: note
+        });
+      });
+
+      if (missingMandatory) {
+        alert("⚠️ 請確實填寫所有電量與氣壓數值！");
+        return;
+      }
+
+      const payload = {
+        vehicleName: selectedVehicle,
+        checker: selectedUser,
+        generalNote: document.getElementById('generalNote').value,
+        items: payloadItems
+      };
+
+      document.getElementById('loading').style.display = 'flex';
+
+      fetch(GAS_API_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain' },
+        body: JSON.stringify({ action: 'submitCheck', payload: payload })
+      })
       .then(res => res.json())
       .then(res => {
-        if(res.success) {
-          initData = res.data;
-          populateDropdowns();
-          renderItems();
-          document.getElementById('loading').style.display = 'none';
+        document.getElementById('loading').style.display = 'none';
+        if (res.success) {
+          alert("✅ 晨間清點送出成功！單號：" + res.checkId);
+          location.reload();
         } else {
-          alert("資料載入失敗：" + res.error);
+          alert("❌ 送出失敗：" + res.error);
         }
       })
       .catch(err => {
-        console.error("詳細錯誤資訊：", err);
-        alert("資料載入或繪製過程發生錯誤，請開啟開發者工具 (F12) 查看 Console 紀錄！");
+        document.getElementById('loading').style.display = 'none';
+        alert("網路連線錯誤，請重試！");
+        console.error(err);
       });
-  }
-
-  function populateDropdowns() {
-    const vSelect = document.getElementById('vehicleSelect');
-    vSelect.innerHTML = initData.vehicles.map(v => `<option value="${v.Vehicle_Name}">${v.Vehicle_Name}</option>`).join('');
-
-    const uSelect = document.getElementById('userSelect');
-    uSelect.innerHTML = initData.users.map(u => `<option value="${u.User_Name}">${u.User_Name}</option>`).join('');
-  }
-
-  function renderItems() {
-    const selectedVehicle = String(document.getElementById('vehicleSelect').value || '');
-    const container = document.getElementById('itemsContainer');
-    container.innerHTML = '';
-
-    // 安全地過濾適用車輛（強制轉為字串避免崩潰）
-    const filteredItems = initData.items.filter(item => {
-      const scope = String(item.Vehicle_Scope || 'ALL').trim();
-      if (scope === 'ALL' || scope === '') return true;
-      
-      const scopeList = scope.split(',').map(s => s.trim());
-      return scopeList.includes(selectedVehicle);
-    });
-
-    // 依 Category_1 群組化
-    const categories = [...new Set(filteredItems.map(i => i.Category_1))];
-
-    categories.forEach(cat => {
-      if (!cat) return;
-      const catTitle = document.createElement('div');
-      catTitle.className = 'section-title';
-      catTitle.innerText = cat;
-      container.appendChild(catTitle);
-
-      const catItems = filteredItems.filter(i => i.Category_1 === cat);
-      catItems.forEach(item => {
-        const isMandatory = item.Input_Type === 'mandatory_number';
-        const itemCard = document.createElement('div');
-        itemCard.className = `item-card ${isMandatory ? 'mandatory' : ''}`;
-
-        let inputHtml = '';
-        if (isMandatory) {
-          inputHtml = `<input type="number" id="input_${item.Item_ID}" placeholder="請輸入數值" required>`;
-        } else if (item.Input_Type === 'optional_qty') {
-          inputHtml = `<input type="number" id="input_${item.Item_ID}" value="${item.Standard_Qty || 0}" style="width: 80px; display:inline-block;"> 包/個 (預設齊全)`;
-        } else {
-          inputHtml = `<select id="input_${item.Item_ID}"><option value="正常">✅ 正常 / 完整</option><option value="異常">❌ 異常 / 缺失</option></select>`;
-        }
-
-        itemCard.innerHTML = `
-          <div class="item-header">
-            <span class="item-name">${item.Item_Name}</span>
-            ${isMandatory ? '<span style="color:#f59e0b; font-size:0.8rem; font-weight:bold;">必填數據</span>' : ''}
-          </div>
-          <div class="item-hint">${item.Item_Hint || ''}</div>
-          <div class="item-input">
-            ${inputHtml}
-            <input type="text" id="note_${item.Item_ID}" placeholder="未補齊或異常原因（選填）" style="margin-top: 6px; font-size: 0.85rem;">
-          </div>
-        `;
-        container.appendChild(itemCard);
-      });
-    });
-  }
-
-  function submitCheck() {
-    const selectedVehicle = String(document.getElementById('vehicleSelect').value || '');
-    const selectedUser = String(document.getElementById('userSelect').value || '');
-    
-    const filteredItems = initData.items.filter(item => {
-      const scope = String(item.Vehicle_Scope || 'ALL').trim();
-      if (scope === 'ALL' || scope === '') return true;
-      return scope.split(',').map(s => s.trim()).includes(selectedVehicle);
-    });
-
-    let payloadItems = [];
-    let missingMandatory = false;
-
-    filteredItems.forEach(item => {
-      const valInput = document.getElementById(`input_${item.Item_ID}`);
-      const noteInput = document.getElementById(`note_${item.Item_ID}`);
-      const val = valInput ? valInput.value : '';
-      const note = noteInput ? noteInput.value : '';
-
-      if (item.Input_Type === 'mandatory_number' && !val) {
-        missingMandatory = true;
-      }
-
-      let isAbnormal = false;
-      if (item.Input_Type === 'mandatory_number') {
-        if (parseFloat(val) < parseFloat(item.Warning_Min)) isAbnormal = true;
-      } else if (item.Input_Type === 'optional_qty') {
-        if (parseFloat(val) < parseFloat(item.Warning_Min)) isAbnormal = true;
-      } else if (val === '異常') {
-        isAbnormal = true;
-      }
-
-      payloadItems.push({
-        itemId: item.Item_ID,
-        itemName: item.Item_Name,
-        inputValue: val,
-        standardQty: item.Standard_Qty || '',
-        isAbnormal: isAbnormal,
-        itemNote: note
-      });
-    });
-
-    if (missingMandatory) {
-      alert("⚠️ 請確實填寫所有電量與氣壓數值！");
-      return;
     }
-
-    const payload = {
-      vehicleName: selectedVehicle,
-      checker: selectedUser,
-      generalNote: document.getElementById('generalNote').value,
-      items: payloadItems
-    };
-
-    document.getElementById('loading').style.display = 'flex';
-
-    fetch(GAS_API_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'text/plain' },
-      body: JSON.stringify({ action: 'submitCheck', payload: payload })
-    })
-    .then(res => res.json())
-    .then(res => {
-      document.getElementById('loading').style.display = 'none';
-      if (res.success) {
-        alert("✅ 晨間清點送出成功！單號：" + res.checkId);
-        location.reload();
-      } else {
-        alert("❌ 送出失敗：" + res.error);
-      }
-    })
-    .catch(err => {
-      document.getElementById('loading').style.display = 'none';
-      alert("網路連線錯誤，請重試！");
-      console.error(err);
-    });
-  }
-</script>
+  </script>
 </body>
 </html>
