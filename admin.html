@@ -29,7 +29,7 @@
     
     .section-header { font-weight: bold; margin: 16px 0 8px 4px; color: #334155; }
     
-    /* 🌀 CSS 轉圈圈動畫元件 */
+    /* 🌀 CSS 轉圈圈圖示 */
     .spinner {
       display: inline-block;
       width: 16px;
@@ -96,7 +96,6 @@
     const GAS_API_URL = "https://script.google.com/macros/s/AKfycbyBXwfnayjato5donoxrdOUVtv45EihyOU1tYxq8Nix2DsB6AtRBEP1pu4ohc4lrRs_0A/exec";
     
     const MANAGER_PIN = "1199"; 
-    
     let allHistoricalRecords = [];
 
     window.onload = function() {
@@ -142,28 +141,48 @@
       }
 
       container.innerHTML = records.map(r => {
+        // 時間格式清理：將 ISO 字串轉換為易讀格式
+        let timeDisplay = String(r.Timestamp || '');
+        if (timeDisplay.includes('T')) {
+          timeDisplay = timeDisplay.replace('T', ' ').substring(0, 19);
+        }
+
         let metricsHtml = '';
         if (r.details && r.details.length > 0) {
-          const detailList = r.details.map(d => {
-            const isAbnormal = d.Is_Abnormal === 'TRUE' || d.Is_Abnormal === true;
-            const mark = isAbnormal ? ' ⚠️<span style="color:#ef4444;">(缺失/低於標準)</span>' : '';
-            const note = d.Item_Note ? ` <span style="color:#64748b;">[備註: ${d.Item_Note}]</span>` : '';
-            return `<div class="metric-item">• <strong>${d.Item_Name}</strong>: ${d.Input_Value}${mark}${note}</div>`;
-          }).join('');
+          // 過濾：只留下「非純正常」的項目（包含氣壓、電量數字，或異常報欠項目）
+          const keyDetails = r.details.filter(d => {
+            const val = String(d.Input_Value || d.inputValue || '');
+            const isAbnormal = d.Is_Abnormal === 'TRUE' || d.Is_Abnormal === true || d.isAbnormal === true;
+            return val !== '正常' || isAbnormal;
+          });
 
-          metricsHtml = `
-            <div class="metrics-box">
-              <div class="metrics-title">📊 檢查數據與報欠明細：</div>
-              ${detailList}
-            </div>
-          `;
+          if (keyDetails.length > 0) {
+            const detailList = keyDetails.map(d => {
+              // 欄位名稱容錯相容
+              const name = d.Item_Name || d.itemName || d.ItemName || '器材項目';
+              const val = d.Input_Value || d.inputValue || d.InputValue || '';
+              const isAbnormal = d.Is_Abnormal === 'TRUE' || d.Is_Abnormal === true || d.isAbnormal === true;
+              const note = d.Item_Note || d.itemNote || '';
+
+              const mark = isAbnormal ? ' ⚠️<span style="color:#ef4444; font-weight:bold;">(缺失/低於標準)</span>' : '';
+              const noteText = note ? ` <span style="color:#64748b;">[備註: ${note}]</span>` : '';
+              return `<div class="metric-item">• <strong>${name}</strong>: ${val}${mark}${noteText}</div>`;
+            }).join('');
+
+            metricsHtml = `
+              <div class="metrics-box">
+                <div class="metrics-title">📊 關鍵檢查數據與報欠明細：</div>
+                ${detailList}
+              </div>
+            `;
+          }
         }
 
         return `
           <div class="card">
             <button class="btn-approve" onclick="approveCheck('${r.Check_ID}')">✅ 批准簽核</button>
             <div class="card-title">${r.Vehicle_Name} 救護車</div>
-            <div class="card-sub">清點同仁：${r.Checker} | 時間：${r.Timestamp}</div>
+            <div class="card-sub">清點同仁：${r.Checker} | 時間：${timeDisplay}</div>
             ${metricsHtml}
             <div style="font-size:0.85rem; color:#475569; margin-top:4px;">整體備註：${r.General_Note || '無'}</div>
           </div>
@@ -178,18 +197,21 @@
         return;
       }
 
-      container.innerHTML = issues.map(i => `
-        <div class="card">
-          <div style="display:flex; justify-content:space-between; align-items:center;">
-            <div>
-              <span class="badge-danger">${i.Vehicle_Name}</span>
-              <strong style="margin-left:6px;">${i.Item_Name}</strong>
+      container.innerHTML = issues.map(i => {
+        const name = i.Item_Name || i.itemName || '器材項目';
+        return `
+          <div class="card">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+              <div>
+                <span class="badge-danger">${i.Vehicle_Name}</span>
+                <strong style="margin-left:6px;">${name}</strong>
+              </div>
+              <button class="btn-resolve" onclick="resolveIssue('${i.Issue_ID}')">已補充結案</button>
             </div>
-            <button class="btn-resolve" onclick="resolveIssue('${i.Issue_ID}')">已補充結案</button>
+            <div class="card-sub" style="margin-top:6px;">現有數值：${i.Actual_Qty} (標準：${i.Standard_Qty}) | 原因：${i.Unresolved_Reason}</div>
           </div>
-          <div class="card-sub" style="margin-top:6px;">現有數值：${i.Actual_Qty} (標準：${i.Standard_Qty}) | 原因：${i.Unresolved_Reason}</div>
-        </div>
-      `).join('');
+        `;
+      }).join('');
     }
 
     function unlockManagerMode() {
@@ -211,7 +233,11 @@
         return;
       }
       select.innerHTML = '<option value="">-- 請選擇欲稽核的檢查單號 --</option>' + 
-        allHistoricalRecords.map(r => `<option value="${r.Check_ID}">${r.Timestamp} - ${r.Vehicle_Name}車 (${r.Checker}) [${r.Review_Status}]</option>`).join('');
+        allHistoricalRecords.map(r => {
+          let timeDisplay = String(r.Timestamp || '');
+          if (timeDisplay.includes('T')) timeDisplay = timeDisplay.replace('T', ' ').substring(0, 19);
+          return `<option value="${r.Check_ID}">${timeDisplay} - ${r.Vehicle_Name}車 (${r.Checker}) [${r.Review_Status}]</option>`;
+        }).join('');
     }
 
     function viewCheckDetail() {
@@ -226,14 +252,18 @@
       }
 
       const detailRows = record.details.map(d => {
-        const isAbnormal = d.Is_Abnormal === 'TRUE' || d.Is_Abnormal === true;
+        const name = d.Item_Name || d.itemName || '器材項目';
+        const val = d.Input_Value || d.inputValue || '';
+        const isAbnormal = d.Is_Abnormal === 'TRUE' || d.Is_Abnormal === true || d.isAbnormal === true;
+        const note = d.Item_Note || d.itemNote || '-';
+
         const statusTag = isAbnormal ? '<span style="color:#ef4444; font-weight:bold;">⚠️ 異常</span>' : '<span style="color:#10b981;">✅ 正常</span>';
         return `
           <tr style="border-bottom:1px solid #f1f5f9;">
-            <td style="padding:6px; font-size:0.85rem;">${d.Item_Name}</td>
-            <td style="padding:6px; font-size:0.85rem; font-weight:bold;">${d.Input_Value}</td>
+            <td style="padding:6px; font-size:0.85rem;">${name}</td>
+            <td style="padding:6px; font-size:0.85rem; font-weight:bold;">${val}</td>
             <td style="padding:6px; font-size:0.85rem;">${statusTag}</td>
-            <td style="padding:6px; font-size:0.8rem; color:#64748b;">${d.Item_Note || '-'}</td>
+            <td style="padding:6px; font-size:0.8rem; color:#64748b;">${note}</td>
           </tr>
         `;
       }).join('');
