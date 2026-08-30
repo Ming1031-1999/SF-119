@@ -28,7 +28,30 @@
     .btn-unlock { background: #8b5cf6; color: white; border: none; padding: 6px 12px; border-radius: 6px; font-weight: bold; font-size: 0.82rem; cursor: pointer; }
     
     .section-header { font-weight: bold; margin: 16px 0 8px 4px; color: #334155; }
-    .loading-text { color: #64748b; font-size: 0.88rem; padding: 8px 4px; }
+    
+    /* 🌀 CSS 轉圈圈動畫元件 */
+    .spinner {
+      display: inline-block;
+      width: 16px;
+      height: 16px;
+      border: 2px solid #cbd5e1;
+      border-top: 2px solid #1e3a8a;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    .loading-flex {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: #64748b;
+      font-size: 0.88rem;
+      padding: 8px 4px;
+    }
   </style>
 </head>
 <body>
@@ -48,14 +71,16 @@
     </select>
   </div>
 
-  <!-- 一般幹部日常簽核區 -->
   <div class="section-header">📌 待簽核清單</div>
-  <div id="recordsContainer"><div class="loading-text">⏳ 正在讀取簽核單...</div></div>
+  <div id="recordsContainer">
+    <div class="loading-flex"><div class="spinner"></div> 正在讀取簽核單...</div>
+  </div>
 
   <div class="section-header">🚨 待處置缺失項目</div>
-  <div id="issuesContainer"><div class="loading-text">⏳ 正在讀取缺失項目...</div></div>
+  <div id="issuesContainer">
+    <div class="loading-flex"><div class="spinner"></div> 正在讀取缺失項目...</div>
+  </div>
 
-  <!-- 管理者解鎖專屬區塊（預設隱藏） -->
   <div id="managerAuditArea" style="display: none; margin-top: 24px; border-top: 2px dashed #cbd5e1; padding-top: 16px;">
     <div class="section-header" style="color: #6b21a8; font-size: 1.1rem;">👑 管理者專屬：歷史數據明細稽核</div>
     <div class="card" style="background: #faf5ff; border-color: #d8b4fe;">
@@ -70,8 +95,7 @@
   <script>
     const GAS_API_URL = "https://script.google.com/macros/s/AKfycbyBXwfnayjato5donoxrdOUVtv45EihyOU1tYxq8Nix2DsB6AtRBEP1pu4ohc4lrRs_0A/exec";
     
-    // 預設管理者 PIN 碼 (可隨時修改)
-    const MANAGER_PIN = "2388"; 
+    const MANAGER_PIN = "1199"; 
     
     let allHistoricalRecords = [];
 
@@ -168,7 +192,6 @@
       `).join('');
     }
 
-    // PIN 碼解鎖管理者專屬區塊
     function unlockManagerMode() {
       const pwd = prompt("🔐 請輸入管理者解鎖 PIN 碼：");
       if (pwd === MANAGER_PIN) {
