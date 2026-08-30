@@ -6,7 +6,7 @@
   <title>每日救護車檢查 - 幹部簽核後台</title>
   <style>
     body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; background: #f8fafc; margin: 0; padding: 12px; }
-    .header { background: #0f172a; color: white; padding: 14px 16px; border-radius: 12px; margin-bottom: 12px; }
+    .header { background: #0f172a; color: white; padding: 14px 16px; border-radius: 12px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; }
     .card { background: white; padding: 14px; border-radius: 10px; border: 1px solid #e2e8f0; margin-bottom: 12px; }
     .card-title { font-weight: bold; font-size: 1.05rem; color: #1e3a8a; }
     .card-sub { font-size: 0.85rem; color: #64748b; margin: 4px 0 8px 0; }
@@ -25,6 +25,8 @@
     .badge-danger { background: #fee2e2; color: #991b1b; padding: 2px 6px; border-radius: 4px; font-size: 0.8rem; font-weight: bold; }
     .btn-approve { background: #10b981; color: white; border: none; padding: 8px 14px; border-radius: 6px; font-weight: bold; cursor: pointer; float: right; }
     .btn-resolve { background: #3b82f6; color: white; border: none; padding: 6px 10px; border-radius: 6px; font-size: 0.85rem; cursor: pointer; }
+    .btn-unlock { background: #8b5cf6; color: white; border: none; padding: 6px 12px; border-radius: 6px; font-weight: bold; font-size: 0.82rem; cursor: pointer; }
+    
     .section-header { font-weight: bold; margin: 16px 0 8px 4px; color: #334155; }
     .loading-text { color: #64748b; font-size: 0.88rem; padding: 8px 4px; }
   </style>
@@ -32,8 +34,11 @@
 <body>
 
   <div class="header">
-    <h1 style="margin:0; font-size:1.2rem;">🛡️ 救護檢查 - 幹部審核後台</h1>
-    <p style="margin:4px 0 0 0; font-size:0.8rem; opacity:0.8;">每日簽核與缺失補充追蹤</p>
+    <div>
+      <h1 style="margin:0; font-size:1.2rem;">🛡️ 救護檢查 - 幹部審核後台</h1>
+      <p style="margin:4px 0 0 0; font-size:0.8rem; opacity:0.8;">每日簽核與缺失補充追蹤</p>
+    </div>
+    <button class="btn-unlock" onclick="unlockManagerMode()">🔒 解鎖管理者功能</button>
   </div>
 
   <div class="card" style="margin-bottom:16px;">
@@ -43,14 +48,32 @@
     </select>
   </div>
 
+  <!-- 一般幹部日常簽核區 -->
   <div class="section-header">📌 待簽核清單</div>
   <div id="recordsContainer"><div class="loading-text">⏳ 正在讀取簽核單...</div></div>
 
   <div class="section-header">🚨 待處置缺失項目</div>
   <div id="issuesContainer"><div class="loading-text">⏳ 正在讀取缺失項目...</div></div>
 
+  <!-- 管理者解鎖專屬區塊（預設隱藏） -->
+  <div id="managerAuditArea" style="display: none; margin-top: 24px; border-top: 2px dashed #cbd5e1; padding-top: 16px;">
+    <div class="section-header" style="color: #6b21a8; font-size: 1.1rem;">👑 管理者專屬：歷史數據明細稽核</div>
+    <div class="card" style="background: #faf5ff; border-color: #d8b4fe;">
+      <label style="font-weight:bold; font-size:0.9rem; color: #581c87;">選取歷史檢查單號進行稽核：</label>
+      <select id="historyCheckSelect" style="width:100%; padding:10px; margin-top:6px; font-size:0.95rem; border-radius:8px; border:1px solid #c084fc;" onchange="viewCheckDetail()">
+        <option value="">-- 請選擇欲稽核的歷史單號 --</option>
+      </select>
+      <div id="historyDetailBox" style="margin-top:12px;"></div>
+    </div>
+  </div>
+
   <script>
     const GAS_API_URL = "https://script.google.com/macros/s/AKfycbyBXwfnayjato5donoxrdOUVtv45EihyOU1tYxq8Nix2DsB6AtRBEP1pu4ohc4lrRs_0A/exec";
+    
+    // 預設管理者 PIN 碼 (可隨時修改)
+    const MANAGER_PIN = "2388"; 
+    
+    let allHistoricalRecords = [];
 
     window.onload = function() {
       loadInitData();
@@ -63,7 +86,6 @@
         .then(res => {
           if (res.success && res.data.users) {
             const select = document.getElementById('reviewerSelect');
-            // 過濾 Role 為 reviewer 或 admin 的同仁（若無指定則顯示全部人員）
             const reviewers = res.data.users.filter(u => u.Role === 'reviewer' || u.Role === 'admin');
             const list = reviewers.length > 0 ? reviewers : res.data.users;
             select.innerHTML = '<option value="">-- 請選擇簽核幹部 --</option>' + 
@@ -77,7 +99,8 @@
         .then(res => res.json())
         .then(res => {
           if(res.success && res.data) {
-            renderRecords(res.data.records || []);
+            allHistoricalRecords = res.data.records || [];
+            renderRecords(allHistoricalRecords);
             renderIssues(res.data.issues || []);
           }
         })
@@ -95,7 +118,6 @@
       }
 
       container.innerHTML = records.map(r => {
-        // 整理並顯示關鍵數據（氣壓、電量或任何非預設輸入的欄位）
         let metricsHtml = '';
         if (r.details && r.details.length > 0) {
           const detailList = r.details.map(d => {
@@ -144,6 +166,68 @@
           <div class="card-sub" style="margin-top:6px;">現有數值：${i.Actual_Qty} (標準：${i.Standard_Qty}) | 原因：${i.Unresolved_Reason}</div>
         </div>
       `).join('');
+    }
+
+    // PIN 碼解鎖管理者專屬區塊
+    function unlockManagerMode() {
+      const pwd = prompt("🔐 請輸入管理者解鎖 PIN 碼：");
+      if (pwd === MANAGER_PIN) {
+        alert("✅ 解鎖成功！已載入管理者稽核功能。");
+        document.getElementById('managerAuditArea').style.display = 'block';
+        populateHistoryDropdown();
+        window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+      } else if (pwd !== null) {
+        alert("❌ 密碼錯誤，無法解鎖！");
+      }
+    }
+
+    function populateHistoryDropdown() {
+      const select = document.getElementById('historyCheckSelect');
+      if (!allHistoricalRecords || allHistoricalRecords.length === 0) {
+        select.innerHTML = '<option value="">目前無歷史清點單據</option>';
+        return;
+      }
+      select.innerHTML = '<option value="">-- 請選擇欲稽核的檢查單號 --</option>' + 
+        allHistoricalRecords.map(r => `<option value="${r.Check_ID}">${r.Timestamp} - ${r.Vehicle_Name}車 (${r.Checker}) [${r.Review_Status}]</option>`).join('');
+    }
+
+    function viewCheckDetail() {
+      const checkId = document.getElementById('historyCheckSelect').value;
+      const box = document.getElementById('historyDetailBox');
+      if (!checkId) { box.innerHTML = ''; return; }
+
+      const record = allHistoricalRecords.find(r => r.Check_ID === checkId);
+      if (!record || !record.details) {
+        box.innerHTML = '<div style="color:#64748b;">查無此單號明細。</div>';
+        return;
+      }
+
+      const detailRows = record.details.map(d => {
+        const isAbnormal = d.Is_Abnormal === 'TRUE' || d.Is_Abnormal === true;
+        const statusTag = isAbnormal ? '<span style="color:#ef4444; font-weight:bold;">⚠️ 異常</span>' : '<span style="color:#10b981;">✅ 正常</span>';
+        return `
+          <tr style="border-bottom:1px solid #f1f5f9;">
+            <td style="padding:6px; font-size:0.85rem;">${d.Item_Name}</td>
+            <td style="padding:6px; font-size:0.85rem; font-weight:bold;">${d.Input_Value}</td>
+            <td style="padding:6px; font-size:0.85rem;">${statusTag}</td>
+            <td style="padding:6px; font-size:0.8rem; color:#64748b;">${d.Item_Note || '-'}</td>
+          </tr>
+        `;
+      }).join('');
+
+      box.innerHTML = `
+        <div style="background:#ffffff; padding:10px; border-radius:8px; border:1px solid #e9d5ff; margin-top:8px;">
+          <div style="font-weight:bold; color:#6b21a8; margin-bottom:6px;">📋 完整清點明細數據表：</div>
+          <table style="width:100%; border-collapse:collapse; text-align:left;">
+            <thead>
+              <tr style="border-bottom:2px solid #e9d5ff; font-size:0.85rem; color:#6b21a8;">
+                <th>器材項目</th><th>填寫數據</th><th>判定</th><th>備註</th>
+              </tr>
+            </thead>
+            <tbody>${detailRows}</tbody>
+          </table>
+        </div>
+      `;
     }
 
     function approveCheck(checkId) {
