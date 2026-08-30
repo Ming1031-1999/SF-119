@@ -195,10 +195,15 @@
 
         let metricsHtml = '';
         if (r.details && r.details.length > 0) {
+          // 精準過濾：只留下「異常項目」或名稱包含「電量 / 氣壓 / 壓力 / 氧氣 / zoll / 血糖機」的必填數值項目
           const keyDetails = r.details.filter(d => {
-            const val = String(parseInputValue(d));
+            const name = parseItemName(d);
             const isAbnormal = d.Is_Abnormal === 'TRUE' || d.Is_Abnormal === true || d.isAbnormal === true;
-            return val !== '正常' || isAbnormal;
+            
+            // 關鍵字比對：只要名稱包含以下關鍵字（不限大小寫）即認定為電量/壓力項目
+            const isMetricItem = /電量|氣壓|壓力|氧氣|psi|zoll|機|電/i.test(name);
+
+            return isAbnormal || isMetricItem;
           });
 
           if (keyDetails.length > 0) {
@@ -215,7 +220,7 @@
 
             metricsHtml = `
               <div class="metrics-box">
-                <div class="metrics-title">📊 關鍵檢查數據與報欠明細：</div>
+                <div class="metrics-title">📊 關鍵數據 (電量/氣壓) 與報欠缺失明細：</div>
                 ${detailList}
               </div>
             `;
