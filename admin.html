@@ -3,42 +3,57 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <!-- 強制禁止瀏覽器快取舊版本 -->
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
   <title>每日救護車檢查 - 幹部簽核後台</title>
   <style>
-    body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; background: #f8fafc; margin: 0; padding: 12px; }
-    .header { background: #0f172a; color: white; padding: 14px 16px; border-radius: 12px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; }
-    .card { background: white; padding: 14px; border-radius: 10px; border: 1px solid #e2e8f0; margin-bottom: 12px; }
-    .card-title { font-weight: bold; font-size: 1.05rem; color: #1e3a8a; }
-    .card-sub { font-size: 0.85rem; color: #64748b; margin: 4px 0 8px 0; }
+    :root {
+      --primary: #1e3a8a;
+      --bg: #f8fafc;
+      --card-bg: #ffffff;
+      --border: #cbd5e1;
+      --text: #0f172a;
+    }
+    body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 12px; }
+    .header { background: #0f172a; color: white; padding: 16px; border-radius: 12px; margin-bottom: 14px; display: flex; justify-content: space-between; align-items: center; }
+    .header h1 { margin: 0; font-size: 1.35rem; }
+    .header p { margin: 4px 0 0 0; font-size: 0.9rem; opacity: 0.85; }
+
+    .card { background: white; padding: 16px; border-radius: 12px; border: 1.5px solid var(--border); margin-bottom: 14px; box-shadow: 0 2px 4px rgba(0,0,0,0.02); }
+    .card-title { font-weight: 900; font-size: 1.3rem; color: #1e3a8a; }
+    .card-sub { font-size: 1.05rem; color: #334155; font-weight: 600; margin: 6px 0 10px 0; }
     
+    /* 🔍 大字體關鍵數據盒 */
     .metrics-box {
       background: #f1f5f9;
-      border-radius: 8px;
-      padding: 10px;
-      margin: 8px 0;
-      font-size: 0.88rem;
-      border-left: 4px solid #3b82f6;
+      border-radius: 10px;
+      padding: 12px 14px;
+      margin: 10px 0;
+      font-size: 1.1rem;
+      border-left: 5px solid #3b82f6;
     }
-    .metrics-title { font-weight: bold; color: #1e3a8a; margin-bottom: 4px; }
-    .metric-item { margin: 2px 0; color: #334155; }
+    .metrics-title { font-weight: 900; color: #1e3a8a; font-size: 1.15rem; margin-bottom: 8px; }
+    .metric-item { margin: 6px 0; color: #0f172a; font-weight: 700; font-size: 1.1rem; line-height: 1.4; }
     
-    .badge-danger { background: #fee2e2; color: #991b1b; padding: 2px 6px; border-radius: 4px; font-size: 0.8rem; font-weight: bold; }
-    .btn-approve { background: #10b981; color: white; border: none; padding: 8px 14px; border-radius: 6px; font-weight: bold; cursor: pointer; float: right; }
-    .btn-resolve { background: #3b82f6; color: white; border: none; padding: 6px 10px; border-radius: 6px; font-size: 0.85rem; cursor: pointer; }
-    .btn-unlock { background: #8b5cf6; color: white; border: none; padding: 6px 12px; border-radius: 6px; font-weight: bold; font-size: 0.82rem; cursor: pointer; }
+    .badge-danger { background: #fee2e2; color: #991b1b; padding: 3px 8px; border-radius: 6px; font-size: 0.95rem; font-weight: 800; }
+    .badge-warning { background: #fef3c7; color: #b45309; padding: 3px 8px; border-radius: 6px; font-size: 0.95rem; font-weight: 800; }
     
-    .section-header { font-weight: bold; margin: 16px 0 8px 4px; color: #334155; }
+    .btn-approve { background: #10b981; color: white; border: none; padding: 10px 18px; border-radius: 8px; font-weight: 900; font-size: 1.1rem; cursor: pointer; float: right; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+    .btn-resolve { background: #3b82f6; color: white; border: none; padding: 8px 14px; border-radius: 8px; font-size: 1rem; cursor: pointer; font-weight: 800; }
+    .btn-unlock { background: #8b5cf6; color: white; border: none; padding: 8px 14px; border-radius: 8px; font-weight: 800; font-size: 0.95rem; cursor: pointer; }
     
+    .section-header { font-weight: 900; font-size: 1.25rem; margin: 20px 0 10px 4px; color: #0f172a; }
+    
+    label { font-weight: 800; display: block; margin-bottom: 8px; font-size: 1.1rem; }
+    select { width: 100%; padding: 12px; font-size: 1.1rem; font-weight: 700; border-radius: 8px; border: 1.5px solid var(--border); box-sizing: border-box; }
+
     .spinner {
       display: inline-block;
-      width: 16px;
-      height: 16px;
-      border: 2px solid #cbd5e1;
-      border-top: 2px solid #1e3a8a;
+      width: 20px;
+      height: 20px;
+      border: 3px solid #cbd5e1;
+      border-top: 3px solid #1e3a8a;
       border-radius: 50%;
       animation: spin 0.8s linear infinite;
     }
@@ -50,10 +65,11 @@
     .loading-flex {
       display: flex;
       align-items: center;
-      gap: 8px;
-      color: #64748b;
-      font-size: 0.88rem;
-      padding: 8px 4px;
+      gap: 10px;
+      color: #334155;
+      font-size: 1.05rem;
+      font-weight: 700;
+      padding: 10px 4px;
     }
   </style>
 </head>
@@ -61,15 +77,15 @@
 
   <div class="header">
     <div>
-      <h1 style="margin:0; font-size:1.2rem;">🛡️ 救護檢查 - 幹部審核後台</h1>
-      <p style="margin:4px 0 0 0; font-size:0.8rem; opacity:0.8;">每日簽核與缺失補充追蹤</p>
+      <h1>🛡️ 救護檢查 - 幹部審核後台</h1>
+      <p>每日簽核與缺失補充追蹤</p>
     </div>
-    <button class="btn-unlock" onclick="unlockManagerMode()">🔒 解鎖管理者功能</button>
+    <button class="btn-unlock" onclick="unlockManagerMode()">🔒 管理者功能</button>
   </div>
 
   <div class="card" style="margin-bottom:16px;">
-    <label style="font-weight:bold; font-size:0.9rem;">選擇簽核幹部：</label>
-    <select id="reviewerSelect" style="width:100%; padding:10px; margin-top:6px; box-sizing:border-box; font-size:0.95rem; border-radius:8px; border:1px solid #cbd5e1;">
+    <label>選擇簽核幹部：</label>
+    <select id="reviewerSelect">
       <option value="">⏳ 載入幹部名單中...</option>
     </select>
   </div>
@@ -79,16 +95,16 @@
     <div class="loading-flex"><div class="spinner"></div> 正在讀取簽核單...</div>
   </div>
 
-  <div class="section-header">🚨 待處置缺失項目</div>
+  <div class="section-header">🚨 待處置與待追蹤缺失項目</div>
   <div id="issuesContainer">
     <div class="loading-flex"><div class="spinner"></div> 正在讀取缺失項目...</div>
   </div>
 
   <div id="managerAuditArea" style="display: none; margin-top: 24px; border-top: 2px dashed #cbd5e1; padding-top: 16px;">
-    <div class="section-header" style="color: #6b21a8; font-size: 1.1rem;">👑 管理者專屬：歷史數據明細稽核</div>
+    <div class="section-header" style="color: #6b21a8; font-size: 1.2rem;">👑 管理者專屬：歷史數據明細稽核</div>
     <div class="card" style="background: #faf5ff; border-color: #d8b4fe;">
-      <label style="font-weight:bold; font-size:0.9rem; color: #581c87;">選取歷史檢查單號進行稽核：</label>
-      <select id="historyCheckSelect" style="width:100%; padding:10px; margin-top:6px; font-size:0.95rem; border-radius:8px; border:1px solid #c084fc;" onchange="viewCheckDetail()">
+      <label style="color: #581c87;">選取歷史檢查單號進行稽核：</label>
+      <select id="historyCheckSelect" style="border-color: #c084fc;" onchange="viewCheckDetail()">
         <option value="">-- 請選擇欲稽核的歷史單號 --</option>
       </select>
       <div id="historyDetailBox" style="margin-top:12px;"></div>
@@ -100,10 +116,10 @@
     const MANAGER_PIN = "1199"; 
     
     let allHistoricalRecords = [];
-    let itemLookupMap = {};
+    let itemLookupMap = {}; // Item_ID -> Item_Name
+    let itemTypeMap = {};   // Item_ID -> Input_Type
 
-    // 數據型項目關鍵字清單
-    const METRIC_KEYWORDS = ['電量', '氣壓', '壓力', '磅數', 'psi', 'zoll', '主氧', '副氧', '車載氧', '攜帶氧', '瓶壓'];
+    const METRIC_KEYWORDS = ['電量', '氣壓', '壓力', '磅數', 'psi', 'zoll', '主氧', '副氧', '車載氧', '攜帶氧', '鋼瓶', '瓶壓'];
 
     window.onload = function() {
       loadInitData();
@@ -119,7 +135,11 @@
               res.data.items.forEach(i => {
                 const id = String(i.Item_ID || i.itemId || '').trim();
                 const name = i.Item_Name || i.itemName || '';
-                if (id && name) itemLookupMap[id] = name;
+                const type = i.Input_Type || i.inputType || '';
+                if (id) {
+                  if (name) itemLookupMap[id] = name;
+                  if (type) itemTypeMap[id] = type;
+                }
               });
               
               if (allHistoricalRecords.length > 0) {
@@ -129,7 +149,6 @@
 
             if (res.data.users) {
               const select = document.getElementById('reviewerSelect');
-              // 僅篩選 Role 為 reviewer 的名單（自動排除管理者如呂汯洺）
               const reviewers = res.data.users.filter(u => String(u.Role).trim() === 'reviewer');
               const list = reviewers.length > 0 ? reviewers : res.data.users;
               select.innerHTML = '<option value="">-- 請選擇簽核幹部 --</option>' + 
@@ -170,14 +189,12 @@
       return values[3] !== undefined ? values[3] : (d.Input_Value || d.inputValue || "");
     }
 
-    // 判斷是否為數據型項目（電量/氣壓/壓力）
     function isMetricItem(itemName) {
       if (!itemName) return false;
       const lowerName = String(itemName).toLowerCase();
       return METRIC_KEYWORDS.some(kw => lowerName.includes(kw));
     }
 
-    // 判斷是否為異常/缺失項目
     function isAbnormalItem(d, val) {
       const abnormalStr = String(d.Is_Abnormal || d.isAbnormal || '').toUpperCase().trim();
       if (abnormalStr === 'TRUE' || abnormalStr === '1') return true;
@@ -200,14 +217,14 @@
         })
         .catch(err => {
           console.error("載入失敗：", err);
-          document.getElementById('recordsContainer').innerHTML = '<div class="card" style="color:#ef4444;">⚠️ 讀取失敗！請刷新網頁重試。</div>';
+          document.getElementById('recordsContainer').innerHTML = '<div class="card" style="color:#ef4444; font-weight:bold;">⚠️ 讀取失敗！請刷新網頁重試。</div>';
         });
     }
 
     function renderRecords(records) {
       const container = document.getElementById('recordsContainer');
       if (!records || records.length === 0) {
-        container.innerHTML = '<div class="card" style="color:#64748b;">🎉 目前沒有待簽核的檢查單！</div>';
+        container.innerHTML = '<div class="card" style="color:#64748b; font-size:1.1rem; font-weight:bold;">🎉 目前沒有待簽核的檢查單！</div>';
         return;
       }
 
@@ -219,15 +236,17 @@
 
         let metricsHtml = '';
         if (r.details && r.details.length > 0) {
-          // 精準嚴格過濾：【只保留異常】或【數據型項目（電量/氣壓）】
+          // 精準篩選：1. mandatory_number 2. 名稱包含關鍵字 3. 異常項目
           const keyDetails = r.details.filter(d => {
+            const itemId = String(d.Item_ID || d.itemId || d.ItemID || '').trim();
+            const inputType = itemTypeMap[itemId] || d.Input_Type || d.inputType || '';
             const name = parseItemName(d);
             const val = parseInputValue(d);
 
             const abnormal = isAbnormalItem(d, val);
-            const metric = isMetricItem(name);
+            const isMandatory = (inputType === 'mandatory_number') || isMetricItem(name);
 
-            return abnormal || metric;
+            return abnormal || isMandatory;
           });
 
           if (keyDetails.length > 0) {
@@ -238,7 +257,7 @@
               const note = d.Item_Note || d.itemNote || '';
 
               const mark = abnormal ? ' ⚠️<span style="color:#ef4444; font-weight:bold;">(缺失/低於標準)</span>' : '';
-              const noteText = note ? ` <span style="color:#64748b;">[備註: ${note}]</span>` : '';
+              const noteText = note ? ` <span style="color:#64748b; font-weight:normal;">[備註: ${note}]</span>` : '';
               return `<div class="metric-item">• <strong>${name}</strong>: ${val}${mark}${noteText}</div>`;
             }).join('');
 
@@ -257,7 +276,7 @@
             <div class="card-title">${r.Vehicle_Name} 救護車</div>
             <div class="card-sub">清點同仁：${r.Checker} | 時間：${timeDisplay}</div>
             ${metricsHtml}
-            <div style="font-size:0.85rem; color:#475569; margin-top:4px;">整體備註：${r.General_Note || '無'}</div>
+            <div style="font-size:1rem; color:#334155; font-weight:600; margin-top:6px;">整體備註：${r.General_Note || '無'}</div>
           </div>
         `;
       }).join('');
@@ -266,22 +285,32 @@
     function renderIssues(issues) {
       const container = document.getElementById('issuesContainer');
       if (!issues || issues.length === 0) {
-        container.innerHTML = '<div class="card" style="color:#64748b;">✅ 目前無缺件或待處置項目！</div>';
+        container.innerHTML = '<div class="card" style="color:#64748b; font-size:1.1rem; font-weight:bold;">✅ 目前無缺件或待處置項目！</div>';
         return;
       }
 
       container.innerHTML = issues.map(i => {
         const name = parseItemName(i);
+        const status = String(i.Status || '').trim();
+        const isReplenished = status.includes('已補充');
+
+        const badgeHtml = isReplenished 
+          ? `<span class="badge-warning">🟡 同仁已回報補充（待幹部確認）</span>` 
+          : `<span class="badge-danger">🔴 尚未補充</span>`;
+
+        const logInfo = i.Resolved_By ? `<div style="font-size:0.95rem; color:#4338ca; font-weight:700; margin-top:6px;">📌 ${i.Resolved_By}</div>` : '';
+
         return `
-          <div class="card">
+          <div class="card" style="${isReplenished ? 'border-left: 6px solid #f59e0b;' : 'border-left: 6px solid #ef4444;'}">
             <div style="display:flex; justify-content:space-between; align-items:center;">
               <div>
-                <span class="badge-danger">${i.Vehicle_Name}</span>
-                <strong style="margin-left:6px;">${name}</strong>
+                <strong style="color:#1e3a8a; font-size:1.2rem;">[${i.Vehicle_Name}] ${name}</strong>
+                <div style="margin-top:6px;">${badgeHtml}</div>
               </div>
-              <button class="btn-resolve" onclick="resolveIssue('${i.Issue_ID}')">已補充結案</button>
+              <button class="btn-resolve" onclick="resolveIssue('${i.Issue_ID}')">✅ 確認結案</button>
             </div>
-            <div class="card-sub" style="margin-top:6px;">現有數值：${i.Actual_Qty} (標準：${i.Standard_Qty}) | 原因：${i.Unresolved_Reason}</div>
+            <div class="card-sub" style="margin-top:8px;">現有數值：<strong>${i.Actual_Qty}</strong> (標準：${i.Standard_Qty}) | 缺件原因：${i.Unresolved_Reason}</div>
+            ${logInfo}
           </div>
         `;
       }).join('');
@@ -320,7 +349,7 @@
 
       const record = allHistoricalRecords.find(r => r.Check_ID === checkId);
       if (!record || !record.details) {
-        box.innerHTML = '<div style="color:#64748b;">查無此單號明細。</div>';
+        box.innerHTML = '<div style="color:#64748b; font-size:1rem;">查無此單號明細。</div>';
         return;
       }
 
@@ -330,23 +359,23 @@
         const abnormal = isAbnormalItem(d, val);
         const note = d.Item_Note || d.itemNote || '-';
 
-        const statusTag = abnormal ? '<span style="color:#ef4444; font-weight:bold;">⚠️ 異常</span>' : '<span style="color:#10b981;">✅ 正常</span>';
+        const statusTag = abnormal ? '<span style="color:#ef4444; font-weight:bold;">⚠️ 異常</span>' : '<span style="color:#10b981; font-weight:bold;">✅ 正常</span>';
         return `
           <tr style="border-bottom:1px solid #f1f5f9;">
-            <td style="padding:6px; font-size:0.85rem;">${name}</td>
-            <td style="padding:6px; font-size:0.85rem; font-weight:bold;">${val}</td>
-            <td style="padding:6px; font-size:0.85rem;">${statusTag}</td>
-            <td style="padding:6px; font-size:0.8rem; color:#64748b;">${note}</td>
+            <td style="padding:8px; font-size:1rem; font-weight:bold;">${name}</td>
+            <td style="padding:8px; font-size:1rem; font-weight:bold; color:#1e3a8a;">${val}</td>
+            <td style="padding:8px; font-size:1rem;">${statusTag}</td>
+            <td style="padding:8px; font-size:0.95rem; color:#475569;">${note}</td>
           </tr>
         `;
       }).join('');
 
       box.innerHTML = `
-        <div style="background:#ffffff; padding:10px; border-radius:8px; border:1px solid #e9d5ff; margin-top:8px;">
-          <div style="font-weight:bold; color:#6b21a8; margin-bottom:6px;">📋 完整清點明細數據表：</div>
+        <div style="background:#ffffff; padding:12px; border-radius:10px; border:1.5px solid #e9d5ff; margin-top:10px;">
+          <div style="font-weight:900; color:#6b21a8; font-size:1.1rem; margin-bottom:8px;">📋 完整清點明細數據表：</div>
           <table style="width:100%; border-collapse:collapse; text-align:left;">
             <thead>
-              <tr style="border-bottom:2px solid #e9d5ff; font-size:0.85rem; color:#6b21a8;">
+              <tr style="border-bottom:2px solid #e9d5ff; font-size:1rem; color:#6b21a8;">
                 <th>器材項目</th><th>填寫數據</th><th>判定</th><th>備註</th>
               </tr>
             </thead>
@@ -388,7 +417,7 @@
         body: JSON.stringify({ action: 'resolveIssue', payload: { issueId: issueId, reviewer: reviewer } })
       }).then(res => res.json()).then(res => {
         if(res.success) {
-          alert("✅ 缺失已成功結案！");
+          alert("✅ 該缺件項目已確認結案！");
           loadPendingData();
         }
       });
