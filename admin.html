@@ -3,6 +3,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <!-- 強制禁止瀏覽器快取舊版本 -->
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+  <meta http-equiv="Pragma" content="no-cache" />
+  <meta http-equiv="Expires" content="0" />
   <title>每日救護車檢查 - 幹部簽核後台</title>
   <style>
     body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; background: #f8fafc; margin: 0; padding: 12px; }
@@ -98,13 +102,16 @@
     let allHistoricalRecords = [];
     let itemLookupMap = {};
 
+    // 數據型項目關鍵字清單
+    const METRIC_KEYWORDS = ['電量', '氣壓', '壓力', '磅數', 'psi', 'zoll', '主氧', '副氧', '車載氧', '攜帶氧', '瓶壓'];
+
     window.onload = function() {
       loadInitData();
       loadPendingData();
     };
 
     function loadInitData() {
-      fetch(`${GAS_API_URL}?action=getInitData`)
+      fetch(`${GAS_API_URL}?action=getInitData&_t=${Date.now()}`)
         .then(res => res.json())
         .then(res => {
           if (res.success && res.data) {
@@ -122,8 +129,8 @@
 
             if (res.data.users) {
               const select = document.getElementById('reviewerSelect');
-              // 僅篩選 Role 為 reviewer 的名單，排除 admin 管理者
-              const reviewers = res.data.users.filter(u => u.Role === 'reviewer');
+              // 僅篩選 Role 為 reviewer 的名單（自動排除管理者如呂汯洺）
+              const reviewers = res.data.users.filter(u => String(u.Role).trim() === 'reviewer');
               const list = reviewers.length > 0 ? reviewers : res.data.users;
               select.innerHTML = '<option value="">-- 請選擇簽核幹部 --</option>' + 
                 list.map(u => `<option value="${u.User_Name}">${u.User_Name}</option>`).join('');
@@ -163,8 +170,26 @@
       return values[3] !== undefined ? values[3] : (d.Input_Value || d.inputValue || "");
     }
 
+    // 判斷是否為數據型項目（電量/氣壓/壓力）
+    function isMetricItem(itemName) {
+      if (!itemName) return false;
+      const lowerName = String(itemName).toLowerCase();
+      return METRIC_KEYWORDS.some(kw => lowerName.includes(kw));
+    }
+
+    // 判斷是否為異常/缺失項目
+    function isAbnormalItem(d, val) {
+      const abnormalStr = String(d.Is_Abnormal || d.isAbnormal || '').toUpperCase().trim();
+      if (abnormalStr === 'TRUE' || abnormalStr === '1') return true;
+
+      const valStr = String(val || '').trim();
+      if (valStr === '異常' || valStr.includes('異常') || valStr.includes('缺失') || valStr.includes('低於')) return true;
+
+      return false;
+    }
+
     function loadPendingData() {
-      fetch(`${GAS_API_URL}?action=getPendingData`)
+      fetch(`${GAS_API_URL}?action=getPendingData&_t=${Date.now()}`)
         .then(res => res.json())
         .then(res => {
           if(res.success && res.data) {
@@ -194,22 +219,25 @@
 
         let metricsHtml = '';
         if (r.details && r.details.length > 0) {
+          // 精準嚴格過濾：【只保留異常】或【數據型項目（電量/氣壓）】
           const keyDetails = r.details.filter(d => {
             const name = parseItemName(d);
-            const isAbnormal = d.Is_Abnormal === 'TRUE' || d.Is_Abnormal === true || d.isAbnormal === true;
-            const isMetricItem = /電量|氣壓|壓力|氧氣|psi|zoll|機|電/i.test(name);
+            const val = parseInputValue(d);
 
-            return isAbnormal || isMetricItem;
+            const abnormal = isAbnormalItem(d, val);
+            const metric = isMetricItem(name);
+
+            return abnormal || metric;
           });
 
           if (keyDetails.length > 0) {
             const detailList = keyDetails.map(d => {
               const name = parseItemName(d);
               const val = parseInputValue(d);
-              const isAbnormal = d.Is_Abnormal === 'TRUE' || d.Is_Abnormal === true || d.isAbnormal === true;
+              const abnormal = isAbnormalItem(d, val);
               const note = d.Item_Note || d.itemNote || '';
 
-              const mark = isAbnormal ? ' ⚠️<span style="color:#ef4444; font-weight:bold;">(缺失/低於標準)</span>' : '';
+              const mark = abnormal ? ' ⚠️<span style="color:#ef4444; font-weight:bold;">(缺失/低於標準)</span>' : '';
               const noteText = note ? ` <span style="color:#64748b;">[備註: ${note}]</span>` : '';
               return `<div class="metric-item">• <strong>${name}</strong>: ${val}${mark}${noteText}</div>`;
             }).join('');
@@ -299,10 +327,10 @@
       const detailRows = record.details.map(d => {
         const name = parseItemName(d);
         const val = parseInputValue(d);
-        const isAbnormal = d.Is_Abnormal === 'TRUE' || d.Is_Abnormal === true || d.isAbnormal === true;
+        const abnormal = isAbnormalItem(d, val);
         const note = d.Item_Note || d.itemNote || '-';
 
-        const statusTag = isAbnormal ? '<span style="color:#ef4444; font-weight:bold;">⚠️ 異常</span>' : '<span style="color:#10b981;">✅ 正常</span>';
+        const statusTag = abnormal ? '<span style="color:#ef4444; font-weight:bold;">⚠️ 異常</span>' : '<span style="color:#10b981;">✅ 正常</span>';
         return `
           <tr style="border-bottom:1px solid #f1f5f9;">
             <td style="padding:6px; font-size:0.85rem;">${name}</td>
