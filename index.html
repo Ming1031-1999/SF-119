@@ -127,7 +127,7 @@
     .tab-content { display: none; }
     .tab-content.active { display: block; }
 
-    /* 🎒 主套組大外框 (Main Group Box) */
+    /* 🎒 主套組大外框 */
     .group-box {
       border: 2px solid #cbd5e1;
       border-radius: 12px;
@@ -151,8 +151,8 @@
 
     /* 👝 內層小包 (如 血糖包、IV包、IGEL包) 嵌套容器 */
     .sub-pack-box {
-      background: #ffffff;
-      border: 2px dashed #94a3b8;
+      background: #f8fafc;
+      border: 2px dashed #64748b;
       border-radius: 10px;
       padding: 10px;
       margin: 12px 0;
@@ -403,6 +403,16 @@
       });
     }
 
+    // 萬能連字號切分器：支援全形「－」、半形「-」、破折號「—」或底線「_」
+    function parseCat2(cat2Str) {
+      const raw = String(cat2Str || '').trim();
+      const parts = raw.split(/[-—–－_]/).map(p => p.trim()).filter(Boolean);
+      if (parts.length > 1) {
+        return { main: parts[0], sub: parts.slice(1).join('-') };
+      }
+      return { main: raw, sub: '' };
+    }
+
     // 🎨 主套組主題顏色與圖示配置
     function getGroupTheme(cat1, mainCat) {
       cat1 = String(cat1 || '');
@@ -458,7 +468,6 @@
       return name;
     }
 
-    // 建立單個器材卡片 DOM
     function createItemCardElement(item) {
       const isMandatory = item.Input_Type === 'mandatory_number';
       const itemCard = document.createElement('div');
@@ -522,16 +531,17 @@
 
         const cat1Items = filteredItems.filter(i => i.Category_1 === cat1);
 
-        // 提取主分類名稱（以 "-" 前的名稱為主，如：急救包、攜帶氧）
-        const mainCatList = [];
-        cat1Items.forEach(i => {
-          const mainCat = String(i.Category_2 || '').split('-')[0].trim();
-          if (mainCat && !mainCatList.includes(mainCat)) {
-            mainCatList.push(mainCat);
+        // 使用 Map 依據解析後的主名稱 (main) 進行分組
+        const mainCatMap = new Map();
+        cat1Items.forEach(item => {
+          const { main } = parseCat2(item.Category_2);
+          if (!mainCatMap.has(main)) {
+            mainCatMap.set(main, []);
           }
+          mainCatMap.get(main).push(item);
         });
 
-        mainCatList.forEach(mainCat => {
+        mainCatMap.forEach((itemsInMain, mainCat) => {
           const theme = getGroupTheme(cat1, mainCat);
 
           // 1. 建立主外框容器 (Group Box)
@@ -551,29 +561,29 @@
           `;
           groupBox.appendChild(groupHeader);
 
-          // 抓出屬於這個主分類的所有器材項目
-          const mainCatItems = cat1Items.filter(i => String(i.Category_2 || '').split('-')[0].trim() === mainCat);
+          // 3. 分出直屬器材 (sub === '') 與 子包器材 (sub !== '')
+          const directItems = [];
+          const subMap = new Map();
 
-          // 3. 渲染主包直屬器材（沒有 "-" 的項目）
-          const directItems = mainCatItems.filter(i => !String(i.Category_2 || '').includes('-'));
+          itemsInMain.forEach(item => {
+            const { sub } = parseCat2(item.Category_2);
+            if (!sub) {
+              directItems.push(item);
+            } else {
+              if (!subMap.has(sub)) {
+                subMap.set(sub, []);
+              }
+              subMap.get(sub).push(item);
+            }
+          });
+
+          // 先渲染主包直屬器材（例如急救包直接包含的紗布、彈繃）
           directItems.forEach(item => {
             groupBox.appendChild(createItemCardElement(item));
           });
 
-          // 4. 抓取子包/內袋名稱清單（如：血糖包、IV包、IGEL包）
-          const subCatList = [];
-          mainCatItems.forEach(i => {
-            const parts = String(i.Category_2 || '').split('-');
-            if (parts.length > 1) {
-              const subName = parts.slice(1).join('-').trim();
-              if (subName && !subCatList.includes(subName)) {
-                subCatList.push(subName);
-              }
-            }
-          });
-
-          // 5. 渲染內層子包 (Sub Pack Box) 嵌套於主框內
-          subCatList.forEach(subName => {
+          // 再渲染各個子包（例如：血糖包、IV包、IGEL包）嵌套於主包內
+          subMap.forEach((subItems, subName) => {
             const subPackBox = document.createElement('div');
             subPackBox.className = 'sub-pack-box';
 
@@ -581,11 +591,6 @@
             subHeader.className = 'sub-pack-header';
             subHeader.innerHTML = `👝 內層小包：<strong>${subName}</strong>`;
             subPackBox.appendChild(subHeader);
-
-            const subItems = mainCatItems.filter(i => {
-              const parts = String(i.Category_2 || '').split('-');
-              return parts.length > 1 && parts.slice(1).join('-').trim() === subName;
-            });
 
             subItems.forEach(item => {
               subPackBox.appendChild(createItemCardElement(item));
