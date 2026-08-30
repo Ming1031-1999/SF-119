@@ -179,9 +179,18 @@
       background: #ffffff;
     }
     .item-header { display: flex; justify-content: space-between; align-items: center; }
-    .item-name { font-weight: 600; font-size: 0.95rem; color: #1e293b; }
-    .item-hint { font-size: 0.8rem; color: var(--text-sub); margin-top: 2px; }
-    .item-input { margin-top: 6px; }
+    .item-name { font-weight: bold; font-size: 1.05rem; color: #0f172a; }
+    
+    /* 🔍 放大說明文字並強化對比 */
+    .item-hint { 
+      font-size: 0.95rem; 
+      font-weight: 500;
+      color: #334155; 
+      margin-top: 4px; 
+      line-height: 1.4;
+    }
+    
+    .item-input { margin-top: 8px; }
 
     .submit-bar {
       position: fixed;
@@ -403,7 +412,6 @@
       });
     }
 
-    // 萬能連字號切分器：支援全形「－」、半形「-」、破折號「—」或底線「_」
     function parseCat2(cat2Str) {
       const raw = String(cat2Str || '').trim();
       const parts = raw.split(/[-—–－_]/).map(p => p.trim()).filter(Boolean);
@@ -413,7 +421,6 @@
       return { main: raw, sub: '' };
     }
 
-    // 🎨 主套組主題顏色與圖示配置
     function getGroupTheme(cat1, mainCat) {
       cat1 = String(cat1 || '');
       mainCat = String(mainCat || '');
@@ -531,7 +538,6 @@
 
         const cat1Items = filteredItems.filter(i => i.Category_1 === cat1);
 
-        // 使用 Map 依據解析後的主名稱 (main) 進行分組
         const mainCatMap = new Map();
         cat1Items.forEach(item => {
           const { main } = parseCat2(item.Category_2);
@@ -544,13 +550,11 @@
         mainCatMap.forEach((itemsInMain, mainCat) => {
           const theme = getGroupTheme(cat1, mainCat);
 
-          // 1. 建立主外框容器 (Group Box)
           const groupBox = document.createElement('div');
           groupBox.className = 'group-box';
           groupBox.style.borderColor = theme.borderColor;
           groupBox.style.backgroundColor = theme.boxBg;
 
-          // 2. 主套組抬頭 Banner
           const groupHeader = document.createElement('div');
           groupHeader.className = 'group-header';
           groupHeader.style.backgroundColor = theme.headerBg;
@@ -561,7 +565,6 @@
           `;
           groupBox.appendChild(groupHeader);
 
-          // 3. 分出直屬器材 (sub === '') 與 子包器材 (sub !== '')
           const directItems = [];
           const subMap = new Map();
 
@@ -577,12 +580,10 @@
             }
           });
 
-          // 先渲染主包直屬器材（例如急救包直接包含的紗布、彈繃）
           directItems.forEach(item => {
             groupBox.appendChild(createItemCardElement(item));
           });
 
-          // 再渲染各個子包（例如：血糖包、IV包、IGEL包）嵌套於主包內
           subMap.forEach((subItems, subName) => {
             const subPackBox = document.createElement('div');
             subPackBox.className = 'sub-pack-box';
