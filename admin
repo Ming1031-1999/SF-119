@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>每日救護車檢查 - 幹部簽核後台</title>
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; background: #f8fafc; margin: 0; padding: 12px; }
+    .header { background: #0f172a; color: white; padding: 14px 16px; border-radius: 12px; margin-bottom: 12px; }
+    .card { background: white; padding: 14px; border-radius: 10px; border: 1px solid #e2e8f0; margin-bottom: 12px; }
+    .card-title { font-weight: bold; font-size: 1rem; color: #1e3a8a; }
+    .card-sub { font-size: 0.85rem; color: #64748b; margin: 4px 0 8px 0; }
+    .badge-danger { background: #fee2e2; color: #991b1b; padding: 2px 6px; border-radius: 4px; font-size: 0.8rem; font-weight: bold; }
+    .btn-approve { background: #10b981; color: white; border: none; padding: 8px 12px; border-radius: 6px; font-weight: bold; cursor: pointer; float: right; }
+    .btn-resolve { background: #3b82f6; color: white; border: none; padding: 6px 10px; border-radius: 6px; font-size: 0.85rem; cursor: pointer; }
+    .section-header { font-weight: bold; margin: 16px 0 8px 4px; color: #334155; }
+  </style>
+</head>
+<body>
+
+  <div class="header">
+    <h1 style="margin:0; font-size:1.2rem;">🛡️ 救護檢查 - 幹部審核後台</h1>
+    <p style="margin:4px 0 0 0; font-size:0.8rem; opacity:0.8;">每日簽核與缺失補充追蹤</p>
+  </div>
+
+  <div class="card" style="margin-bottom:16px;">
+    <label style="font-weight:bold; font-size:0.9rem;">簽核幹部姓名：</label>
+    <input type="text" id="reviewerName" placeholder="請輸入幹部姓名" style="width:100%; padding:8px; margin-top:6px; box-sizing:border-box;">
+  </div>
+
+  <div class="section-header">📌 待簽核清單</div>
+  <div id="recordsContainer"></div>
+
+  <div class="section-header">🚨 待處置缺失項目</div>
+  <div id="issuesContainer"></div>
+
+  <script>
+    const GAS_API_URL = "https://script.google.com/macros/s/AKfycbyBXwfnayjato5donoxrdOUVtv45EihyOU1tYxq8Nix2DsB6AtRBEP1pu4ohc4lrRs_0A/exec";
+
+    window.onload = function() {
+      loadPendingData();
+    };
+
+    function loadPendingData() {
+      fetch(`${GAS_API_URL}?action=getPendingData`)
+        .then(res => res.json())
+        .then(res => {
+          if(res.success) {
+            renderRecords(res.data.records);
+            renderIssues(res.data.issues);
+          }
+        });
+    }
+
+    function renderRecords(records) {
+      const container = document.getElementById('recordsContainer');
+      if (!records || records.length === 0) {
+        container.innerHTML = '<div class="card" style="color:#64748b;">🎉 目前沒有待簽核的檢查單！</div>';
+        return;
+      }
+
+      container.innerHTML = records.map(r => `
+        <div class="card">
+          <button class="btn-approve" onclick="approveCheck('${r.Check_ID}')">✅ 批准簽核</button>
+          <div class="card-title">${r.Vehicle_Name} 救護車</div>
+          <div class="card-sub">清點同仁：${r.Checker} | 時間：${r.Timestamp}</div>
+          <div style="font-size:0.85rem; color:#475569;">整體備註：${r.General_Note || '無'}</div>
+        </div>
+      `).join('');
+    }
+
+    function renderIssues(issues) {
+      const container = document.getElementById('issuesContainer');
+      if (!issues || issues.length === 0) {
+        container.innerHTML = '<div class="card" style="color:#64748b;">✅ 目前無缺件或待處置項目！</div>';
+        return;
+      }
+
+      container.innerHTML = issues.map(i => `
+        <div class="card">
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <div>
+              <span class="badge-danger">${i.Vehicle_Name}</span>
+              <strong style="margin-left:6px;">${i.Item_Name}</strong>
+            </div>
+            <button class="btn-resolve" onclick="resolveIssue('${i.Issue_ID}')">已補充結案</button>
+          </div>
+          <div class="card-sub" style="margin-top:6px;">現有數值：${i.Actual_Qty} (標準：${i.Standard_Qty}) | 原因：${i.Unresolved_Reason}</div>
+        </div>
+      `).join('');
+    }
+
+    function approveCheck(checkId) {
+      const reviewer = document.getElementById('reviewerName').value;
+      if (!reviewer) {
+        alert("⚠️ 請先在最上方輸入簽核幹部姓名！");
+        return;
+      }
+
+      fetch(GAS_API_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain' },
+        body: JSON.stringify({ action: 'approveCheck', payload: { checkId: checkId, reviewer: reviewer } })
+      }).then(res => res.json()).then(res => {
+        if(res.success) {
+          alert("✅ 簽核完成！");
+          loadPendingData();
+        }
+      });
+    }
+
+    function resolveIssue(issueId) {
+      const reviewer = document.getElementById('reviewerName').value;
+      if (!reviewer) {
+        alert("⚠️ 請先在最上方輸入幹部姓名！");
+        return;
+      }
+
+      fetch(GAS_API_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain' },
+        body: JSON.stringify({ action: 'resolveIssue', payload: { issueId: issueId, reviewer: reviewer } })
+      }).then(res => res.json()).then(res => {
+        if(res.success) {
+          alert("✅ 缺失已成功結案！");
+          loadPendingData();
+        }
+      });
+    }
+  </script>
+</body>
+</html>
