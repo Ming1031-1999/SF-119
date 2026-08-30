@@ -69,7 +69,6 @@
       100% { transform: rotate(360deg); }
     }
 
-    /* 待補充/更換動態看板樣式 */
     .issue-notice-box {
       background: #fef2f2;
       border: 1px solid #fca5a5;
@@ -94,6 +93,9 @@
       border-radius: 6px;
       font-size: 0.85rem;
       box-shadow: 0 1px 2px rgba(0,0,0,0.03);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
     }
 
     .step-nav {
@@ -268,7 +270,7 @@
             currentSessionToken = res.data.sessionToken || "";
             populateDropdowns();
             renderItems();
-            renderVehicleIssues(); // 渲染待補充清單
+            renderVehicleIssues();
             document.getElementById('loading').style.display = 'none';
           } else {
             alert("資料載入失敗：" + res.error);
@@ -293,7 +295,6 @@
       renderVehicleIssues();
     }
 
-    // 渲染「本車待補充/更換器材清單」
     function renderVehicleIssues() {
       const selectedVehicle = String(document.getElementById('vehicleSelect').value || '');
       const box = document.getElementById('issueNoticeBox');
@@ -305,11 +306,10 @@
         box.style.borderColor = '#86efac';
         countBadge.style.background = '#10b981';
         countBadge.innerText = '0 項';
-        listContainer.innerHTML = '<div style="color:#166534; font-size:0.85rem; margin-top:4px;">🎉 本車目前裝備齊全，無待補充或報欠項目！</div>';
+        listContainer.innerHTML = '<div style="color:#166534; font-size:0.85rem; margin-top:4px;">🎉 本車目前裝備齊全，無待補充項目！</div>';
         return;
       }
 
-      // 篩選選定車輛的待處置缺失
       const vehicleIssues = initData.issues.filter(i => String(i.Vehicle_Name).trim() === selectedVehicle);
 
       if (vehicleIssues.length === 0) {
@@ -317,7 +317,7 @@
         box.style.borderColor = '#86efac';
         countBadge.style.background = '#10b981';
         countBadge.innerText = '0 項';
-        listContainer.innerHTML = `<div style="color:#166534; font-size:0.85rem; margin-top:4px;">🎉 ${selectedVehicle} 車目前無待補充或報欠項目！</div>`;
+        listContainer.innerHTML = `<div style="color:#166534; font-size:0.85rem; margin-top:4px;">🎉 ${selectedVehicle} 車目前無待補充項目！</div>`;
       } else {
         box.style.background = '#fef2f2';
         box.style.borderColor = '#fca5a5';
@@ -332,12 +332,46 @@
 
           return `
             <div class="issue-item-tag">
-              <strong style="color:#991b1b;">• ${name}</strong>：現有數值 <span style="font-weight:bold; color:#ef4444;">${val}</span> ${std}
-              <div style="color:#64748b; font-size:0.78rem; margin-top:2px;">說明/原因：${reason}</div>
+              <div>
+                <strong style="color:#991b1b;">• ${name}</strong>：現有數值 <span style="font-weight:bold; color:#ef4444;">${val}</span> ${std}
+                <div style="color:#64748b; font-size:0.78rem; margin-top:2px;">說明/原因：${reason}</div>
+              </div>
+              <button onclick="resolveIssueDirectly('${i.Issue_ID}')" style="background:#10b981; color:white; border:none; padding:6px 10px; border-radius:6px; font-weight:bold; font-size:0.8rem; cursor:pointer; white-space:nowrap; margin-left:8px;">✅ 我已補充(結案)</button>
             </div>
           `;
         }).join('');
       }
+    }
+
+    // 隊員直接結案
+    function resolveIssueDirectly(issueId) {
+      const selectedUser = document.getElementById('userSelect').value;
+      if (!confirm("確認已完成補充並結案？")) return;
+
+      document.getElementById('loading').style.display = 'flex';
+
+      fetch(GAS_API_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain' },
+        body: JSON.stringify({
+          action: 'resolveIssue',
+          payload: { issueId: issueId, person: selectedUser }
+        })
+      })
+      .then(res => res.json())
+      .then(res => {
+        document.getElementById('loading').style.display = 'none';
+        if (res.success) {
+          alert("✅ 缺件項目已補充並完成結案！");
+          fetchInitData();
+        } else {
+          alert("結案失敗：" + res.error);
+        }
+      })
+      .catch(err => {
+        document.getElementById('loading').style.display = 'none';
+        alert("網路連線錯誤，請重試！");
+      });
     }
 
     function getCategoryStyle(cat1, cat2) {
