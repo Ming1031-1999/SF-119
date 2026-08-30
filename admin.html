@@ -122,7 +122,8 @@
 
             if (res.data.users) {
               const select = document.getElementById('reviewerSelect');
-              const reviewers = res.data.users.filter(u => u.Role === 'reviewer' || u.Role === 'admin');
+              // 僅篩選 Role 為 reviewer 的名單，排除 admin 管理者
+              const reviewers = res.data.users.filter(u => u.Role === 'reviewer');
               const list = reviewers.length > 0 ? reviewers : res.data.users;
               select.innerHTML = '<option value="">-- 請選擇簽核幹部 --</option>' + 
                 list.map(u => `<option value="${u.User_Name}">${u.User_Name}</option>`).join('');
@@ -193,7 +194,6 @@
 
         let metricsHtml = '';
         if (r.details && r.details.length > 0) {
-          // 精準過濾：只留下「異常項目」或「電量/氣壓/壓力相關必填項目」
           const keyDetails = r.details.filter(d => {
             const name = parseItemName(d);
             const isAbnormal = d.Is_Abnormal === 'TRUE' || d.Is_Abnormal === true || d.isAbnormal === true;
