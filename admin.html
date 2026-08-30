@@ -207,6 +207,7 @@
 
           if (keyDetails.length > 0) {
             const detailList = keyDetails.map(d => {
+              // 優先由 parseItemName 反查試算表 Item_List 的中文名稱
               const name = parseItemName(d);
               const val = parseInputValue(d);
               const isAbnormal = d.Is_Abnormal === 'TRUE' || d.Is_Abnormal === true || d.isAbnormal === true;
@@ -225,6 +226,18 @@
             `;
           }
         }
+
+        return `
+          <div class="card">
+            <button class="btn-approve" onclick="approveCheck('${r.Check_ID}')">✅ 批准簽核</button>
+            <div class="card-title">${r.Vehicle_Name} 救護車</div>
+            <div class="card-sub">清點同仁：${r.Checker} | 時間：${timeDisplay}</div>
+            ${metricsHtml}
+            <div style="font-size:0.85rem; color:#475569; margin-top:4px;">整體備註：${r.General_Note || '無'}</div>
+          </div>
+        `;
+      }).join('');
+    }
 
         return `
           <div class="card">
