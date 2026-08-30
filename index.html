@@ -14,7 +14,7 @@
       --card-bg: #ffffff;
       --border: #cbd5e1;
       --text: #0f172a;
-      --text-sub: #64748b;
+      --text-sub: #334155;
     }
     body {
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
@@ -27,7 +27,7 @@
     .header {
       background: var(--primary);
       color: white;
-      padding: 14px 16px;
+      padding: 16px;
       border-radius: 12px;
       margin-bottom: 12px;
       box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
@@ -35,30 +35,32 @@
       justify-content: space-between;
       align-items: center;
     }
-    .header h1 { margin: 0; font-size: 1.25rem; }
-    .header p { margin: 4px 0 0 0; font-size: 0.8rem; opacity: 0.85; }
+    .header h1 { margin: 0; font-size: 1.4rem; }
+    .header p { margin: 4px 0 0 0; font-size: 0.95rem; opacity: 0.9; }
     
     .form-group {
       background: var(--card-bg);
-      padding: 12px;
+      padding: 14px;
       border-radius: 10px;
       border: 1px solid var(--border);
       margin-bottom: 12px;
     }
-    label { font-weight: bold; display: block; margin-bottom: 6px; font-size: 0.9rem; }
+    label { font-weight: 800; display: block; margin-bottom: 8px; font-size: 1.1rem; color: #0f172a; }
     select, input, textarea {
       width: 100%;
-      padding: 10px;
-      border: 1px solid var(--border);
+      padding: 12px;
+      border: 1.5px solid var(--border);
       border-radius: 8px;
       box-sizing: border-box;
-      font-size: 0.95rem;
+      font-size: 1.1rem; /* 大字體輸入 */
+      color: #0f172a;
+      font-weight: 600;
     }
 
     .spinner {
       display: inline-block;
-      width: 20px;
-      height: 20px;
+      width: 24px;
+      height: 24px;
       border: 3px solid #cbd5e1;
       border-top: 3px solid var(--primary);
       border-radius: 50%;
@@ -72,27 +74,27 @@
     /* 🚨 動態待補充看板 */
     .issue-notice-box {
       background: #fef2f2;
-      border: 1px solid #fca5a5;
+      border: 1.5px solid #fca5a5;
       border-radius: 10px;
-      padding: 12px;
+      padding: 14px;
       margin-bottom: 12px;
     }
     .issue-notice-title {
-      font-weight: bold;
+      font-weight: 800;
       color: #991b1b;
-      font-size: 0.92rem;
+      font-size: 1.1rem;
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 6px;
+      margin-bottom: 8px;
     }
     .issue-item-tag {
       background: #ffffff;
-      border-left: 4px solid #ef4444;
-      padding: 8px 10px;
-      margin-top: 6px;
+      border-left: 5px solid #ef4444;
+      padding: 10px 12px;
+      margin-top: 8px;
       border-radius: 6px;
-      font-size: 0.85rem;
+      font-size: 1rem;
       box-shadow: 0 1px 2px rgba(0,0,0,0.03);
       display: flex;
       justify-content: space-between;
@@ -107,13 +109,13 @@
     }
     .step-btn {
       flex: 1;
-      padding: 10px 6px;
+      padding: 12px 8px;
       background: #e2e8f0;
-      color: #64748b;
+      color: #475569;
       border: none;
       border-radius: 8px;
-      font-size: 0.88rem;
-      font-weight: bold;
+      font-size: 1rem;
+      font-weight: 800;
       text-align: center;
       transition: all 0.2s ease;
       white-space: nowrap;
@@ -129,20 +131,20 @@
 
     /* 🎒 主套組大外框 */
     .group-box {
-      border: 2px solid #cbd5e1;
+      border: 2px solid #94a3b8;
       border-radius: 12px;
-      padding: 12px;
-      margin-bottom: 18px;
+      padding: 14px;
+      margin-bottom: 20px;
       background: #ffffff;
       box-shadow: 0 2px 5px rgba(0,0,0,0.03);
     }
 
     .group-header {
-      font-size: 1.15rem;
-      font-weight: 800;
-      padding: 8px 12px;
+      font-size: 1.3rem; /* 加大主標題 */
+      font-weight: 900;
+      padding: 10px 14px;
       border-radius: 8px;
-      margin-bottom: 12px;
+      margin-bottom: 14px;
       display: flex;
       align-items: center;
       justify-content: space-between;
@@ -154,18 +156,18 @@
       background: #f8fafc;
       border: 2px dashed #64748b;
       border-radius: 10px;
-      padding: 10px;
-      margin: 12px 0;
+      padding: 12px;
+      margin: 14px 0;
       box-shadow: 0 1px 3px rgba(0,0,0,0.02);
     }
 
     .sub-pack-header {
-      font-size: 1.02rem;
-      font-weight: 800;
-      color: #1e293b;
-      padding-bottom: 6px;
-      margin-bottom: 8px;
-      border-bottom: 1.5px solid #cbd5e1;
+      font-size: 1.15rem; /* 加大子包標題 */
+      font-weight: 900;
+      color: #0f172a;
+      padding-bottom: 8px;
+      margin-bottom: 10px;
+      border-bottom: 2px solid #cbd5e1;
       display: flex;
       align-items: center;
       gap: 6px;
@@ -173,20 +175,28 @@
 
     .item-card {
       border-radius: 8px;
-      padding: 10px 12px;
-      margin-bottom: 8px;
-      border: 1px solid #e2e8f0;
+      padding: 12px;
+      margin-bottom: 10px;
+      border: 1.5px solid #cbd5e1;
       background: #ffffff;
     }
     .item-header { display: flex; justify-content: space-between; align-items: center; }
-    .item-name { font-weight: bold; font-size: 1.05rem; color: #0f172a; }
     
-    /* 🔍 放大說明文字並強化對比 */
+    /* 🔍 器材名稱大字體 */
+    .item-name { 
+      font-weight: 900; 
+      font-size: 1.25rem; 
+      color: #0f172a; 
+      letter-spacing: 0.3px;
+    }
+    
+    /* 🔍 特大號高對比規格/提示文字 (解決老花問題) */
     .item-hint { 
-      font-size: 0.95rem; 
-      font-weight: 500;
-      color: #334155; 
-      margin-top: 4px; 
+      font-size: 1.1rem; 
+      font-weight: 800; 
+      color: #1e3a8a; /* 深藍色高清晰對比 */
+      margin-top: 6px; 
+      margin-bottom: 4px;
       line-height: 1.4;
     }
     
@@ -196,8 +206,8 @@
       position: fixed;
       bottom: 0; left: 0; right: 0;
       background: white;
-      padding: 10px 16px;
-      border-top: 1px solid var(--border);
+      padding: 12px 16px;
+      border-top: 1.5px solid var(--border);
       box-shadow: 0 -4px 6px -1px rgba(0,0,0,0.08);
       z-index: 100;
       display: flex;
@@ -208,9 +218,9 @@
       background: #64748b;
       color: white;
       border: none;
-      padding: 12px;
+      padding: 14px;
       border-radius: 10px;
-      font-size: 0.95rem;
+      font-size: 1.05rem;
       font-weight: bold;
       cursor: pointer;
       display: none;
@@ -220,16 +230,16 @@
       background: var(--primary);
       color: white;
       border: none;
-      padding: 12px;
+      padding: 14px;
       border-radius: 10px;
-      font-size: 1rem;
+      font-size: 1.15rem;
       font-weight: bold;
       cursor: pointer;
     }
 
     .loading-overlay {
       position: fixed; top: 0; left: 0; right: 0; bottom: 0;
-      background: rgba(255,255,255,0.9);
+      background: rgba(255,255,255,0.92);
       display: flex; flex-direction: column;
       justify-content: center; align-items: center;
       z-index: 999;
@@ -239,8 +249,8 @@
 <body>
 
   <div id="loading" class="loading-overlay">
-    <div style="display: flex; align-items: center; gap: 10px; font-weight: bold; color: #1e3a8a;">
-      <div class="spinner" style="width: 26px; height: 26px; border-width: 3px;"></div>
+    <div style="display: flex; align-items: center; gap: 10px; font-weight: bold; font-size: 1.1rem; color: #1e3a8a;">
+      <div class="spinner"></div>
       <span>載入分隊資料與清單中...</span>
     </div>
   </div>
@@ -250,7 +260,7 @@
       <h1>🚑 每日救護車檢查</h1>
       <p>接續式流程：完成本頁後請按下方「下一步」</p>
     </div>
-    <a href="admin.html" style="color:white; font-size:0.8rem; text-decoration:none; background:rgba(255,255,255,0.2); padding:6px 10px; border-radius:6px; font-weight:bold;">⚙️ 幹部簽核</a>
+    <a href="admin.html" style="color:white; font-size:0.9rem; text-decoration:none; background:rgba(255,255,255,0.2); padding:8px 12px; border-radius:6px; font-weight:bold;">⚙️ 幹部簽核</a>
   </div>
 
   <input type="text" id="website_hp" style="display:none !important;" tabindex="-1" autocomplete="off">
@@ -264,7 +274,7 @@
   <div id="issueNoticeBox" class="issue-notice-box">
     <div class="issue-notice-title">
       <span>🚨 本車目前待補充 / 更換器材：</span>
-      <span id="issueNoticeCount" style="background:#ef4444; color:white; font-size:0.75rem; padding:2px 8px; border-radius:12px;">0 項</span>
+      <span id="issueNoticeCount" style="background:#ef4444; color:white; font-size:0.85rem; padding:3px 10px; border-radius:12px;">0 項</span>
     </div>
     <div id="issueNoticeList"></div>
   </div>
@@ -345,7 +355,7 @@
         box.style.borderColor = '#86efac';
         countBadge.style.background = '#10b981';
         countBadge.innerText = '0 項';
-        listContainer.innerHTML = '<div style="color:#166534; font-size:0.85rem; margin-top:4px;">🎉 本車目前裝備齊全，無待補充項目！</div>';
+        listContainer.innerHTML = '<div style="color:#166534; font-size:1rem; font-weight:bold; margin-top:4px;">🎉 本車目前裝備齊全，無待補充項目！</div>';
         return;
       }
 
@@ -356,7 +366,7 @@
         box.style.borderColor = '#86efac';
         countBadge.style.background = '#10b981';
         countBadge.innerText = '0 項';
-        listContainer.innerHTML = `<div style="color:#166534; font-size:0.85rem; margin-top:4px;">🎉 ${selectedVehicle} 車目前無待補充項目！</div>`;
+        listContainer.innerHTML = `<div style="color:#166534; font-size:1rem; font-weight:bold; margin-top:4px;">🎉 ${selectedVehicle} 車目前無待補充項目！</div>`;
       } else {
         box.style.background = '#fef2f2';
         box.style.borderColor = '#fca5a5';
@@ -372,10 +382,10 @@
           return `
             <div class="issue-item-tag">
               <div>
-                <strong style="color:#991b1b;">• ${name}</strong>：現有數值 <span style="font-weight:bold; color:#ef4444;">${val}</span> ${std}
-                <div style="color:#64748b; font-size:0.78rem; margin-top:2px;">說明/原因：${reason}</div>
+                <strong style="color:#991b1b; font-size:1.1rem;">• ${name}</strong>：現有數值 <span style="font-weight:bold; color:#ef4444; font-size:1.1rem;">${val}</span> <span style="font-size:0.9rem;">${std}</span>
+                <div style="color:#475569; font-size:0.9rem; font-weight:600; margin-top:2px;">說明/原因：${reason}</div>
               </div>
-              <button onclick="resolveIssueDirectly('${i.Issue_ID}')" style="background:#10b981; color:white; border:none; padding:6px 10px; border-radius:6px; font-weight:bold; font-size:0.8rem; cursor:pointer; white-space:nowrap; margin-left:8px;">✅ 我已補充(結案)</button>
+              <button onclick="resolveIssueDirectly('${i.Issue_ID}')" style="background:#10b981; color:white; border:none; padding:8px 12px; border-radius:8px; font-weight:bold; font-size:0.95rem; cursor:pointer; white-space:nowrap; margin-left:8px;">✅ 我已補充(結案)</button>
             </div>
           `;
         }).join('');
@@ -480,14 +490,17 @@
       const itemCard = document.createElement('div');
       itemCard.className = 'item-card';
       if (isMandatory) {
-        itemCard.style.borderLeft = '5px solid #f59e0b';
+        itemCard.style.borderLeft = '6px solid #f59e0b';
       }
 
       let inputHtml = '';
       if (isMandatory) {
         inputHtml = `<input type="tel" inputmode="numeric" pattern="[0-9]*" id="input_${item.Item_ID}" placeholder="請填寫數據（必填）" required>`;
       } else if (item.Input_Type === 'optional_qty') {
-        inputHtml = `<input type="tel" inputmode="numeric" pattern="[0-9]*" id="input_${item.Item_ID}" value="${item.Standard_Qty || 0}" style="width: 80px; display:inline-block; font-weight:bold; color:#1e3a8a;"> 包/個 (預設齊全)`;
+        inputHtml = `<div style="display:flex; align-items:center; gap:8px;">
+          <input type="tel" inputmode="numeric" pattern="[0-9]*" id="input_${item.Item_ID}" value="${item.Standard_Qty || 0}" style="width: 90px; text-align:center; font-weight:bold; color:#1e3a8a;">
+          <span style="font-size:1.1rem; font-weight:700; color:#1e293b;">包/個 (預設齊全)</span>
+        </div>`;
       } else {
         inputHtml = `<select id="input_${item.Item_ID}"><option value="正常">✅ 正常 / 完整</option><option value="異常">❌ 異常 / 缺失</option></select>`;
       }
@@ -495,12 +508,12 @@
       itemCard.innerHTML = `
         <div class="item-header">
           <span class="item-name">${item.Item_Name}</span>
-          ${isMandatory ? '<span style="color:#d97706; font-size:0.78rem; font-weight:bold;">⚠️ 關鍵數據</span>' : ''}
+          ${isMandatory ? '<span style="color:#d97706; font-size:0.9rem; font-weight:bold;">⚠️ 關鍵數據</span>' : ''}
         </div>
         <div class="item-hint">${item.Item_Hint || ''}</div>
         <div class="item-input">
           ${inputHtml}
-          <input type="text" id="note_${item.Item_ID}" placeholder="未補齊或異常原因（選填）" style="margin-top: 6px; font-size: 0.85rem;">
+          <input type="text" id="note_${item.Item_ID}" placeholder="未補齊或異常原因（選填）" style="margin-top: 8px; font-size: 0.98rem; font-weight: normal;">
         </div>
       `;
       return itemCard;
@@ -561,7 +574,7 @@
           groupHeader.style.color = theme.headerColor;
           groupHeader.innerHTML = `
             <span>${theme.icon} ${mainCat}</span>
-            <span style="font-size:0.8rem; font-weight:normal; opacity:0.9;">完整內容物檢查</span>
+            <span style="font-size:0.9rem; font-weight:normal; opacity:0.95;">完整內容物檢查</span>
           `;
           groupBox.appendChild(groupHeader);
 
@@ -656,7 +669,7 @@
           missing = true;
           input.style.borderColor = '#ef4444';
         } else {
-          input.style.borderColor = '#e2e8f0';
+          input.style.borderColor = '#cbd5e1';
         }
       });
 
