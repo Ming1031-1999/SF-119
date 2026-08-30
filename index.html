@@ -52,6 +52,21 @@
       font-size: 0.95rem;
     }
 
+    /* 🌀 CSS 轉圈圈動畫元件 */
+    .spinner {
+      display: inline-block;
+      width: 20px;
+      height: 20px;
+      border: 3px solid #cbd5e1;
+      border-top: 3px solid var(--primary);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
     .step-nav {
       display: flex;
       gap: 6px;
@@ -153,8 +168,12 @@
 </head>
 <body>
 
+  <!-- 帶轉圈圈動畫的載入遮罩 -->
   <div id="loading" class="loading-overlay">
-    <div>⏳ 載入分隊資料與清單中...</div>
+    <div style="display: flex; align-items: center; gap: 10px; font-weight: bold; color: #1e3a8a;">
+      <div class="spinner" style="width: 26px; height: 26px; border-width: 3px;"></div>
+      <span>載入分隊資料與清單中...</span>
+    </div>
   </div>
 
   <div class="header">
@@ -165,7 +184,7 @@
     <a href="admin.html" style="color:white; font-size:0.8rem; text-decoration:none; background:rgba(255,255,255,0.2); padding:6px 10px; border-radius:6px; font-weight:bold;">⚙️ 幹部簽核</a>
   </div>
 
-  <!-- Honeypot 機器人隱藏陷阱欄位 (真人看不到，機器人填寫會被抓包) -->
+  <!-- Honeypot 機器人陷阱欄位 -->
   <input type="text" id="website_hp" style="display:none !important;" tabindex="-1" autocomplete="off">
 
   <div class="form-group">
@@ -195,7 +214,7 @@
     const GAS_API_URL = "https://script.google.com/macros/s/AKfycbyBXwfnayjato5donoxrdOUVtv45EihyOU1tYxq8Nix2DsB6AtRBEP1pu4ohc4lrRs_0A/exec";
 
     let initData = { vehicles: [], users: [], items: [] };
-    let currentSessionToken = ""; // 儲存動態安全 Token
+    let currentSessionToken = "";
     let currentStep = 0;
     let totalSteps = 0;
     let categories1List = [];
@@ -491,7 +510,7 @@
         body: JSON.stringify({
           action: 'submitCheck',
           sessionToken: currentSessionToken,
-          honeypot: document.getElementById('website_hp').value, // 傳送陷阱欄位值
+          honeypot: document.getElementById('website_hp').value,
           payload: payload
         })
       })
