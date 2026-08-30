@@ -99,7 +99,6 @@
     let itemLookupMap = {};
 
     window.onload = function() {
-      // 並行同步發起，不再互相等待阻塞
       loadInitData();
       loadPendingData();
     };
@@ -116,7 +115,6 @@
                 if (id && name) itemLookupMap[id] = name;
               });
               
-              // 若待簽核單先讀完，對照表載入後自動刷出中文名稱
               if (allHistoricalRecords.length > 0) {
                 renderRecords(allHistoricalRecords);
               }
@@ -195,12 +193,10 @@
 
         let metricsHtml = '';
         if (r.details && r.details.length > 0) {
-          // 精準過濾：只留下「異常項目」或名稱包含「電量 / 氣壓 / 壓力 / 氧氣 / zoll / 血糖機」的必填數值項目
+          // 精準過濾：只留下「異常項目」或「電量/氣壓/壓力相關必填項目」
           const keyDetails = r.details.filter(d => {
             const name = parseItemName(d);
             const isAbnormal = d.Is_Abnormal === 'TRUE' || d.Is_Abnormal === true || d.isAbnormal === true;
-            
-            // 關鍵字比對：只要名稱包含以下關鍵字（不限大小寫）即認定為電量/壓力項目
             const isMetricItem = /電量|氣壓|壓力|氧氣|psi|zoll|機|電/i.test(name);
 
             return isAbnormal || isMetricItem;
