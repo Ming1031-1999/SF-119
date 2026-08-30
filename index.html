@@ -154,11 +154,13 @@
     <div>⏳ 載入分隊資料與清單中...</div>
   </div>
 
-  <div class="header">
-    <h1>🚑 每日救護車檢查</h1>
-    <p>接續式流程：完成本頁後請按下方「下一步」</p>
+  <div class="header" style="display:flex; justify-content:space-between; align-items:center;">
+  <div>
+    <h1 style="margin:0;">🚑 每日救護車檢查</h1>
+    <p style="margin:4px 0 0 0;">接續式流程：完成本頁後請按「下一步」</p>
   </div>
-
+  <a href="admin.html" style="color:white; font-size:0.8rem; text-decoration:none; background:rgba(255,255,255,0.2); padding:6px 10px; border-radius:6px;">⚙️ 幹部簽核</a>
+</div>
   <div class="form-group">
     <label>選擇清點車輛：</label>
     <select id="vehicleSelect" onchange="renderItems()"></select>
