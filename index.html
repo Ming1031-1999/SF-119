@@ -49,7 +49,6 @@
       font-size: 0.95rem;
     }
 
-    /* 接續式步驟指示條 */
     .step-nav {
       display: flex;
       gap: 6px;
@@ -105,7 +104,6 @@
       font-weight: bold;
     }
 
-    /* 底部雙按鈕控制列 */
     .submit-bar {
       position: fixed;
       bottom: 0; left: 0; right: 0;
@@ -171,10 +169,7 @@
     <select id="userSelect"></select>
   </div>
 
-  <!-- 步驟進度條 -->
   <div class="step-nav" id="stepNav"></div>
-
-  <!-- 分頁內容容器 -->
   <div id="tabsContainer"></div>
 
   <div id="generalNoteGroup" class="form-group" style="margin-top: 16px; display: none;">
@@ -182,7 +177,6 @@
     <textarea id="generalNote" rows="2" placeholder="例：車載氧瓶蓋略緊，已潤滑處理..."></textarea>
   </div>
 
-  <!-- 底部固定按鈕列 -->
   <div class="submit-bar">
     <button id="prevBtn" class="btn-prev" onclick="goToPrevStep()">⬅️ 上一步</button>
     <button id="nextBtn" class="btn-next" onclick="goToNextStep()">下一步 ➔</button>
@@ -227,21 +221,20 @@
       uSelect.innerHTML = initData.users.map(u => `<option value="${u.User_Name}">${u.User_Name}</option>`).join('');
     }
 
-    // 色彩邏輯：第一部分(器材包/急救包)全面套用紅色系
     function getCategoryStyle(cat1, cat2) {
       cat1 = String(cat1 || '');
       cat2 = String(cat2 || '');
 
       if (cat1.includes('第一部') || cat2.includes('急救包') || cat2.includes('器材包')) {
-        return { bg: '#fff1f2', border: '#fca5a5', tagBg: '#fee2e2', tagColor: '#991b1b' }; // 柔和紅色系
+        return { bg: '#fff1f2', border: '#fca5a5', tagBg: '#fee2e2', tagColor: '#991b1b' };
       } else if (cat2.includes('攜帶氧')) {
-        return { bg: '#f0f9ff', border: '#7dd3fc', tagBg: '#bae6fd', tagColor: '#0369a1' }; // 水藍色
+        return { bg: '#f0f9ff', border: '#7dd3fc', tagBg: '#bae6fd', tagColor: '#0369a1' };
       } else if (cat2.includes('ZOLL')) {
-        return { bg: '#fffbeb', border: '#fcd34d', tagBg: '#fef3c7', tagColor: '#b45309' }; // 金黃色
+        return { bg: '#fffbeb', border: '#fcd34d', tagBg: '#fef3c7', tagColor: '#b45309' };
       } else if (cat1.includes('第三部') || cat2.includes('產包') || cat2.includes('燒燙傷') || cat2.includes('大傷')) {
-        return { bg: '#faf5ff', border: '#d8b4fe', tagBg: '#e9d5ff', tagColor: '#6b21a8' }; // 紫色系
+        return { bg: '#faf5ff', border: '#d8b4fe', tagBg: '#e9d5ff', tagColor: '#6b21a8' };
       } else {
-        return { bg: '#f8fafc', border: '#cbd5e1', tagBg: '#e2e8f0', tagColor: '#334155' }; // 灰藍色
+        return { bg: '#f8fafc', border: '#cbd5e1', tagBg: '#e2e8f0', tagColor: '#334155' };
       }
     }
 
@@ -271,7 +264,6 @@
       totalSteps = categories1List.length;
 
       categories1List.forEach((cat1, index) => {
-        // 1. 建立頂部步驟指示按鈕
         const btn = document.createElement('button');
         btn.className = `step-btn ${index === 0 ? 'active' : ''}`;
         btn.id = `stepBtn_${index}`;
@@ -279,7 +271,6 @@
         btn.onclick = () => jumpToStep(index);
         stepNav.appendChild(btn);
 
-        // 2. 建立分頁區塊
         const tabContent = document.createElement('div');
         tabContent.className = `tab-content ${index === 0 ? 'active' : ''}`;
         tabContent.id = `tabContent_${index}`;
@@ -372,7 +363,6 @@
     }
 
     function goToNextStep() {
-      // 驗證當前頁面的必填數據
       const currentTab = document.getElementById(`tabContent_${currentStep}`);
       const requiredInputs = currentTab.querySelectorAll('input[required]');
       let missing = false;
@@ -408,7 +398,6 @@
 
     function jumpToStep(targetStep) {
       if (targetStep > currentStep) {
-        // 若要跳到後面頁面，強制先驗證目前頁面必填欄位
         const currentTab = document.getElementById(`tabContent_${currentStep}`);
         const requiredInputs = currentTab.querySelectorAll('input[required]');
         let missing = false;
@@ -494,7 +483,7 @@
       .then(res => {
         document.getElementById('loading').style.display = 'none';
         if (res.success) {
-          alert("✅ 晨間清點送出成功！單號：" + res.checkId);
+          alert("✅ 每日檢查單送出成功！單號：" + res.checkId);
           location.reload();
         } else {
           alert("❌ 送出失敗：" + res.error);
