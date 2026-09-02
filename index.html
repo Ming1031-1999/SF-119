@@ -3,52 +3,112 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>SF-119 救護車輛與器材清點系統</title>
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+  <meta http-equiv="Pragma" content="no-cache" />
+  <meta http-equiv="Expires" content="0" />
+  <title>每日救護車檢查</title>
   <style>
     :root {
       --primary: #1e3a8a;
-      --primary-hover: #1e40af;
       --success: #059669;
       --success-bg: #ecfdf5;
       --danger: #dc2626;
       --danger-bg: #fef2f2;
       --warning: #d97706;
-      --bg: #f1f5f9;
+      --bg: #f8fafc;
       --card-bg: #ffffff;
       --border: #cbd5e1;
       --text: #0f172a;
-      --text-sub: #475569;
+      --text-sub: #334155;
     }
-
     * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-
     body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
       background-color: var(--bg);
       color: var(--text);
       margin: 0;
-      padding: 10px;
+      padding: 12px;
       padding-bottom: 90px;
-      font-size: 16px;
     }
-
-    .top-header {
-      background: linear-gradient(135deg, #1e3a8a, #1e40af);
+    .header {
+      background: var(--primary);
       color: white;
-      padding: 12px 14px;
+      padding: 14px 16px;
       border-radius: 12px;
-      margin-bottom: 10px;
+      margin-bottom: 12px;
       box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
     }
-    .top-header h1 { margin: 0 0 8px 0; font-size: 1.15rem; font-weight: 800; }
+    .header h1 { margin: 0; font-size: 1.3rem; font-weight: 800; }
+    .header p { margin: 2px 0 0 0; font-size: 0.85rem; opacity: 0.9; }
     
-    .config-bar { display: flex; gap: 8px; }
-    .config-select {
-      flex: 1; padding: 6px 8px; border-radius: 6px; border: 1px solid #93c5fd;
-      background: #ffffff; color: #0f172a; font-weight: 800; font-size: 0.9rem;
+    .form-group {
+      background: var(--card-bg);
+      padding: 12px 14px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      margin-bottom: 12px;
+    }
+    label { font-weight: 800; display: block; margin-bottom: 6px; font-size: 1rem; color: #0f172a; }
+    select, input, textarea {
+      width: 100%;
+      padding: 10px 12px;
+      border: 1.5px solid var(--border);
+      border-radius: 8px;
+      font-size: 1rem;
+      color: #0f172a;
+      font-weight: 700;
+      background: #ffffff;
     }
 
-    .quick-toolbar { display: flex; gap: 8px; margin-bottom: 10px; }
+    .spinner {
+      display: inline-block;
+      width: 24px;
+      height: 24px;
+      border: 3px solid #cbd5e1;
+      border-top: 3px solid var(--primary);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    /* 🚨 動態待補充看板 */
+    .issue-notice-box {
+      background: #fef2f2;
+      border: 1.5px solid #fca5a5;
+      border-radius: 10px;
+      padding: 12px 14px;
+      margin-bottom: 12px;
+    }
+    .issue-notice-title {
+      font-weight: 800;
+      color: #991b1b;
+      font-size: 1.05rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 6px;
+    }
+    .issue-item-tag {
+      background: #ffffff;
+      border-left: 5px solid #ef4444;
+      padding: 8px 10px;
+      margin-top: 6px;
+      border-radius: 6px;
+      font-size: 0.95rem;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.03);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    /* ⚡ 快捷列 (一鍵全齊 / 過慮) */
+    .quick-toolbar { display: flex; gap: 8px; margin-bottom: 12px; }
     .btn-quick-fill {
       flex: 1.2; background: var(--success-bg); color: #065f46;
       border: 1.5px solid #a7f3d0; padding: 10px; border-radius: 8px;
@@ -62,44 +122,80 @@
     }
     .btn-toggle-filter.active { background: var(--danger-bg); color: #991b1b; border-color: #fca5a5; }
 
-    .step-nav { display: flex; gap: 6px; margin-bottom: 10px; overflow-x: auto; }
+    .step-nav { display: flex; gap: 6px; margin-bottom: 12px; overflow-x: auto; }
     .step-btn {
-      flex: 1; min-width: 110px; padding: 9px 6px; background: #e2e8f0;
-      color: #475569; border: none; border-radius: 8px; font-size: 0.88rem;
-      font-weight: 800; text-align: center; cursor: pointer; white-space: nowrap;
+      flex: 1; min-width: 110px; padding: 10px 6px; background: #e2e8f0;
+      color: #475569; border: none; border-radius: 8px; font-size: 0.92rem;
+      font-weight: 800; text-align: center; white-space: nowrap; cursor: pointer;
     }
-    .step-btn.active { background: var(--primary); color: white; }
+    .step-btn.active { background: var(--primary); color: white; box-shadow: 0 2px 4px rgba(0,0,0,0.15); }
 
-    .group-box { border: 1.5px solid #cbd5e1; border-radius: 12px; padding: 10px; margin-bottom: 12px; background: #ffffff; }
-    .group-header { font-size: 1.05rem; font-weight: 900; padding: 6px 10px; border-radius: 6px; margin-bottom: 8px; color: white; background: #1e3a8a; }
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
 
+    /* 🎒 主套組大外框 */
+    .group-box {
+      border: 1.5px solid #cbd5e1;
+      border-radius: 12px;
+      padding: 10px;
+      margin-bottom: 14px;
+      background: #ffffff;
+    }
+    .group-header {
+      font-size: 1.1rem;
+      font-weight: 900;
+      padding: 8px 12px;
+      border-radius: 8px;
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    /* 👝 內層小包 (如 血糖包、IV包) */
     .sub-pack-box {
-      background: #f8fafc; border: 1.5px dashed #94a3b8; border-radius: 10px;
-      padding: 8px; margin: 8px 0;
+      background: #f8fafc;
+      border: 1.5px dashed #64748b;
+      border-radius: 10px;
+      padding: 8px;
+      margin: 10px 0;
     }
     .sub-pack-header {
-      font-size: 0.95rem; font-weight: 800; color: #1e293b;
-      padding-bottom: 4px; border-bottom: 1px solid #e2e8f0; margin-bottom: 6px;
+      font-size: 1rem;
+      font-weight: 900;
+      color: #0f172a;
+      padding-bottom: 6px;
+      margin-bottom: 8px;
+      border-bottom: 1.5px solid #cbd5e1;
+      display: flex;
+      align-items: center;
+      gap: 6px;
     }
 
+    /* ⚡ 精簡橫向器材列 */
     .item-row {
       display: flex; justify-content: space-between; align-items: center;
-      padding: 8px 10px; background: #ffffff; border: 1px solid #e2e8f0;
+      padding: 8px 10px; background: #ffffff; border: 1px solid #cbd5e1;
       border-radius: 8px; margin-bottom: 6px; min-height: 48px;
     }
     .item-row.is-abnormal { border-color: #fca5a5; background-color: var(--danger-bg); }
 
     .item-left { flex: 1; display: flex; flex-direction: column; justify-content: center; padding-right: 8px; }
     .item-title-wrap { display: flex; align-items: baseline; gap: 6px; flex-wrap: wrap; }
-    .item-name { font-weight: 800; font-size: 1.05rem; color: #0f172a; }
+    .item-name { font-weight: 900; font-size: 1.05rem; color: #0f172a; }
     .item-std-tag { font-size: 0.82rem; font-weight: 800; color: #0284c7; background: #e0f2fe; padding: 1px 6px; border-radius: 4px; }
-    .item-sub-hint { font-size: 0.8rem; color: var(--text-sub); margin-top: 2px; }
+    .item-sub-hint { font-size: 0.82rem; font-weight: 700; color: #1e3a8a; margin-top: 2px; }
+
+    .item-right { display: flex; align-items: center; gap: 4px; flex-shrink: 0; }
 
     .stepper { display: flex; align-items: center; border: 1.5px solid #cbd5e1; border-radius: 8px; overflow: hidden; background: #f8fafc; }
     .btn-step { width: 36px; height: 36px; border: none; background: #f1f5f9; color: #1e3a8a; font-size: 1.3rem; font-weight: 900; cursor: pointer; }
     .btn-step:active { background: #cbd5e1; }
-    .stepper-val { width: 40px; text-align: center; font-weight: 900; font-size: 1.15rem; color: #0f172a; height: 36px; line-height: 36px; }
-    .stepper-val.val-low { color: var(--danger); background: #fee2e2; }
+    .stepper-input {
+      width: 42px; text-align: center; font-weight: 900; font-size: 1.15rem; color: #0f172a;
+      border: none; background: white; padding: 0; height: 36px; outline: none;
+    }
+    .stepper-input.val-low { color: var(--danger); background: #fee2e2; }
 
     .quick-preset-wrap { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; }
     .quick-preset-btns { display: flex; gap: 4px; }
@@ -108,33 +204,61 @@
 
     .status-select { height: 36px; padding: 0 6px; border: 1.5px solid #cbd5e1; border-radius: 8px; font-weight: 800; font-size: 0.9rem; background: white; }
 
+    /* ⚠️ 動態備註抽屜 */
     .note-drawer { display: none; margin-top: -2px; margin-bottom: 8px; padding: 0 4px; }
     .note-drawer input { width: 100%; padding: 8px 10px; border: 1.5px solid #fca5a5; background: #fef2f2; border-radius: 6px; font-size: 0.9rem; color: #991b1b; font-weight: 600; }
 
-    .submit-bar { position: fixed; bottom: 0; left: 0; right: 0; background: white; padding: 10px 14px; border-top: 1.5px solid var(--border); box-shadow: 0 -4px 6px -1px rgba(0,0,0,0.08); z-index: 100; display: flex; gap: 8px; }
-    .btn-prev { flex: 1; background: #64748b; color: white; border: none; padding: 12px; border-radius: 8px; font-size: 1rem; font-weight: 800; cursor: pointer; }
-    .btn-next { flex: 2; background: var(--primary); color: white; border: none; padding: 12px; border-radius: 8px; font-size: 1rem; font-weight: 800; cursor: pointer; }
+    .submit-bar {
+      position: fixed; bottom: 0; left: 0; right: 0; background: white;
+      padding: 10px 14px; border-top: 1.5px solid var(--border);
+      box-shadow: 0 -4px 6px -1px rgba(0,0,0,0.08); z-index: 100; display: flex; gap: 8px;
+    }
+    .btn-prev { flex: 1; background: #64748b; color: white; border: none; padding: 12px; border-radius: 8px; font-size: 1rem; font-weight: bold; cursor: pointer; display: none; }
+    .btn-next { flex: 2; background: var(--primary); color: white; border: none; padding: 12px; border-radius: 8px; font-size: 1.05rem; font-weight: bold; cursor: pointer; }
 
-    .loading-overlay { position: fixed; top:0; left:0; right:0; bottom:0; background: rgba(255,255,255,0.92); display: flex; flex-direction: column; align-items: center; justify-content: center; font-weight: bold; z-index: 999; }
+    .loading-overlay {
+      position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(255,255,255,0.92); display: flex; flex-direction: column;
+      justify-content: center; align-items: center; z-index: 999;
+    }
   </style>
 </head>
 <body>
 
   <div id="loading" class="loading-overlay">
-    <div style="font-size: 1.2rem; margin-bottom: 8px;">🔄 正在連線至 Google 試算表...</div>
-    <div style="font-size: 0.85rem; color: #64748b;">讀取 Item_List、Vehicle_List 與 User_List 中</div>
+    <div style="display: flex; align-items: center; gap: 10px; font-weight: bold; font-size: 1.1rem; color: #1e3a8a;">
+      <div class="spinner"></div>
+      <span>載入分隊資料與清單中...</span>
+    </div>
   </div>
 
-  <div class="top-header">
-    <h1>🚑 SF-119 每日救護車檢查系統</h1>
-    <div class="config-bar">
-      <select id="vehicleSelect" class="config-select">
-        <option value="">載入車輛中...</option>
-      </select>
-      <select id="userSelect" class="config-select">
-        <option value="">選擇檢查同仁...</option>
-      </select>
+  <div class="header">
+    <div>
+      <h1>🚑 每日救護車檢查</h1>
+      <p>接續式流程：完成本頁後請按下方「下一步」</p>
     </div>
+    <a href="admin.html" style="color:white; font-size:0.88rem; text-decoration:none; background:rgba(255,255,255,0.2); padding:6px 10px; border-radius:6px; font-weight:bold;">⚙️ 幹部簽核</a>
+  </div>
+
+  <input type="text" id="website_hp" style="display:none !important;" tabindex="-1" autocomplete="off">
+
+  <div class="form-group">
+    <label>選擇清點車輛：</label>
+    <select id="vehicleSelect" onchange="onVehicleChange()"></select>
+  </div>
+
+  <!-- 🚨 動態待補充 / 更換器材看板 -->
+  <div id="issueNoticeBox" class="issue-notice-box">
+    <div class="issue-notice-title">
+      <span>🚨 本車目前待補充 / 更換器材：</span>
+      <span id="issueNoticeCount" style="background:#ef4444; color:white; font-size:0.85rem; padding:3px 10px; border-radius:12px;">0 項</span>
+    </div>
+    <div id="issueNoticeList"></div>
+  </div>
+
+  <div class="form-group">
+    <label>清點同仁（Checker）：</label>
+    <select id="userSelect"></select>
   </div>
 
   <div class="quick-toolbar">
@@ -143,230 +267,274 @@
   </div>
 
   <div class="step-nav" id="stepNav"></div>
+  <div id="tabsContainer"></div>
 
-  <div id="checklistContainer"></div>
+  <div id="generalNoteGroup" class="form-group" style="margin-top: 16px; display: none;">
+    <label>整體狀況備註（選填）：</label>
+    <textarea id="generalNote" rows="2" placeholder="例：車載氧瓶蓋略緊，已潤滑處理..."></textarea>
+  </div>
 
   <div class="submit-bar">
-    <button id="prevBtn" class="btn-prev" onclick="stepChange(-1)" style="display: none;">⬅️ 上一步</button>
-    <button id="nextBtn" class="btn-next" onclick="stepChange(1)">下一步 ➔</button>
+    <button id="prevBtn" class="btn-prev" onclick="goToPrevStep()">⬅️ 上一步</button>
+    <button id="nextBtn" class="btn-next" onclick="goToNextStep()">下一步 ➔</button>
   </div>
 
   <script>
-    // ⚠️ 請修改為你的 Apps Script Web App URL
-    const GAS_URL = "https://script.google.com/macros/s/YOUR_DEPLOYED_SCRIPT_ID/exec";
+    const GAS_API_URL = "https://script.google.com/macros/s/AKfycbyBXwfnayjato5donoxrdOUVtv45EihyOU1tYxq8Nix2DsB6AtRBEP1pu4ohc4lrRs_0A/exec";
 
-    let sessionToken = "";
-    let treeData = {}; 
-    let cat1List = [];
+    let initData = { vehicles: [], users: [], items: [], issues: [] };
+    let currentSessionToken = "";
     let currentStep = 0;
+    let totalSteps = 0;
+    let categories1List = [];
     let isFilterMode = false;
 
-    // 1. 初始化，發起 doGet action=getInitData
-    async function initSystem() {
-      try {
-        const res = await fetch(`${GAS_URL}?action=getInitData`);
-        const result = await res.json();
+    window.onload = function() {
+      fetchInitData();
+    };
 
-        if (result.success) {
-          sessionToken = result.data.sessionToken;
-          populateConfig(result.data.vehicles, result.data.users);
-          buildTreeData(result.data.items);
-          renderUI();
-        } else {
-          alert("讀取試算表失敗：" + result.error);
-        }
-      } catch (err) {
-        console.error("API 連線失敗:", err);
-        alert("無法連線至後端伺服器，請確認 GAS_URL 設定是否正確！");
-      } finally {
-        document.getElementById('loading').style.display = 'none';
-      }
-    }
-
-    function populateConfig(vehicles, users) {
-      const vSelect = document.getElementById('vehicleSelect');
-      const uSelect = document.getElementById('userSelect');
-
-      vSelect.innerHTML = vehicles.map(v => {
-        const name = v.Vehicle_Name || v.Vehicle_No || v.Name || Object.values(v)[0];
-        return `<option value="${name}">${name}</option>`;
-      }).join('');
-
-      uSelect.innerHTML = `<option value="">請選擇檢查同仁</option>` + users.map(u => {
-        const name = u.User_Name || u.Name || Object.values(u)[0];
-        return `<option value="${name}">${name}</option>`;
-      }).join('');
-    }
-
-    // 將 Item_List 的資料依據 Category_1 ➔ Category_2 進行雙層樹狀結構打包
-    function buildTreeData(items) {
-      treeData = {};
-      items.forEach(item => {
-        const c1 = item.Category_1 || '未分類';
-        const c2 = item.Category_2 || '一般裝備';
-
-        if (!treeData[c1]) treeData[c1] = {};
-        if (!treeData[c1][c2]) treeData[c1][c2] = [];
-
-        treeData[c1][c2].push(item);
-      });
-      cat1List = Object.keys(treeData);
-    }
-
-    // 2. 動態渲染介面
-    function renderUI() {
-      const navContainer = document.getElementById('stepNav');
-      const listContainer = document.getElementById('checklistContainer');
-      navContainer.innerHTML = '';
-      listContainer.innerHTML = '';
-
-      cat1List.forEach((c1Name, idx) => {
-        // 第一層導覽按鈕 (Category_1)
-        const navBtn = document.createElement('button');
-        navBtn.className = `step-btn ${idx === 0 ? 'active' : ''}`;
-        navBtn.innerText = `${idx + 1}. ${c1Name}`;
-        navBtn.onclick = () => switchTab(idx);
-        navContainer.appendChild(navBtn);
-
-        // 分頁面板
-        const panel = document.createElement('div');
-        panel.id = `tab_${idx}`;
-        panel.className = 'tab-panel';
-        panel.style.display = idx === 0 ? 'block' : 'none';
-
-        let html = '';
-
-        // 第二層模組/子包 (Category_2)
-        Object.keys(treeData[c1Name]).forEach(c2Name => {
-          const isSubModule = c2Name.includes('-'); // 判斷是否為內層子包 (如: 急救包-血糖包)
-          
-          if (isSubModule) {
-            html += `<div class="sub-pack-box"><div class="sub-pack-header">👝 內層模組：${c2Name}</div>`;
+    function fetchInitData() {
+      fetch(`${GAS_API_URL}?action=getInitData&_t=${Date.now()}`)
+        .then(res => res.json())
+        .then(res => {
+          if(res.success) {
+            initData = res.data;
+            currentSessionToken = res.data.sessionToken || "";
+            populateDropdowns();
+            renderItems();
+            renderVehicleIssues();
+            document.getElementById('loading').style.display = 'none';
           } else {
-            html += `<div class="group-box"><div class="group-header"><span>📦 ${c2Name}</span></div>`;
+            alert("資料載入失敗：" + res.error);
           }
-
-          treeData[c1Name][c2Name].forEach(item => {
-            const id = item.Item_ID;
-            const name = item.Item_Name;
-            const stdQty = parseInt(item.Standard_Qty, 10) || 0;
-            const warnMin = parseInt(item.Warning_Min, 10) || 0;
-            const hint = item.Item_Hint || '';
-            const type = (item.Input_Type || '').toLowerCase();
-
-            if (type.includes('mandatory') || type.includes('num') || stdQty > 50) {
-              // 壓力/大數值型態 (mandatory_num)
-              html += `
-                <div class="item-row" data-id="${id}" data-name="${name}" data-std="${stdQty}" data-type="pressure" data-mandatory="true" style="border-left: 5px solid #f59e0b;">
-                  <div class="item-left">
-                    <div class="item-title-wrap">
-                      <span class="item-name">${name}</span>
-                      <span style="color:#d97706; font-size:0.8rem; font-weight:bold;">⚠️ 關鍵數據</span>
-                    </div>
-                    ${hint ? `<span class="item-sub-hint">${hint}</span>` : ''}
-                  </div>
-                  <div class="item-right">
-                    <div class="quick-preset-wrap">
-                      <div class="quick-preset-btns">
-                        <button class="btn-preset" onclick="setPressure('${id}', 2200, ${warnMin})">2200</button>
-                        <button class="btn-preset" onclick="setPressure('${id}', 1500, ${warnMin})">1500</button>
-                        <button class="btn-preset" onclick="setPressure('${id}', 1000, ${warnMin})">1000</button>
-                      </div>
-                      <input type="number" id="${id}" class="pressure-input" placeholder="psi" value="${stdQty}" oninput="checkPressure(this, ${warnMin})">
-                    </div>
-                  </div>
-                </div>
-                <div class="note-drawer"><input type="text" class="note-input" placeholder="⚠️ 數值偏低原因說明"></div>
-              `;
-            } else if (type.includes('stat')) {
-              // 狀態型態 (optional_stat)
-              html += `
-                <div class="item-row" data-id="${id}" data-name="${name}" data-std="${stdQty}" data-type="status">
-                  <div class="item-left">
-                    <span class="item-name">${name}</span>
-                    ${hint ? `<span class="item-sub-hint">${hint}</span>` : ''}
-                  </div>
-                  <div class="item-right">
-                    <select class="status-select" onchange="toggleStatusNote(this)">
-                      <option value="正常">✅ 正常</option>
-                      <option value="異常">❌ 異常/待補</option>
-                    </select>
-                  </div>
-                </div>
-                <div class="note-drawer"><input type="text" class="note-input" placeholder="⚠️ 請填寫異常原因"></div>
-              `;
-            } else {
-              // 數量加減型態 (optional_qty)
-              html += `
-                <div class="item-row" data-id="${id}" data-name="${name}" data-std="${stdQty}" data-warn="${warnMin}" data-type="qty">
-                  <div class="item-left">
-                    <div class="item-title-wrap">
-                      <span class="item-name">${name}</span>
-                      <span class="item-std-tag">應備 ${stdQty}</span>
-                    </div>
-                    ${hint ? `<span class="item-sub-hint">${hint}</span>` : ''}
-                  </div>
-                  <div class="item-right">
-                    <div class="stepper">
-                      <button class="btn-step" onclick="changeQty(this, -1, ${stdQty}, ${warnMin})">-</button>
-                      <div class="stepper-val">${stdQty}</div>
-                      <button class="btn-step" onclick="changeQty(this, 1, ${stdQty}, ${warnMin})">+</button>
-                    </div>
-                  </div>
-                </div>
-                <div class="note-drawer"><input type="text" class="note-input" placeholder="⚠️ 請填寫未補齊或短缺原因"></div>
-              `;
-            }
-          });
-
-          html += `</div>`;
+        })
+        .catch(err => {
+          console.error("詳細錯誤資訊：", err);
+          alert("網路或載入發生錯誤，請重新整理網頁！");
         });
+    }
 
-        panel.innerHTML = html;
-        listContainer.appendChild(panel);
+    function populateDropdowns() {
+      const vSelect = document.getElementById('vehicleSelect');
+      vSelect.innerHTML = initData.vehicles.map(v => `<option value="${v.Vehicle_Name}">${v.Vehicle_Name}</option>`).join('');
+
+      const uSelect = document.getElementById('userSelect');
+      uSelect.innerHTML = initData.users.map(u => `<option value="${u.User_Name}">${u.User_Name}</option>`).join('');
+    }
+
+    function onVehicleChange() {
+      renderItems();
+      renderVehicleIssues();
+    }
+
+    function renderVehicleIssues() {
+      const selectedVehicle = String(document.getElementById('vehicleSelect').value || '');
+      const box = document.getElementById('issueNoticeBox');
+      const listContainer = document.getElementById('issueNoticeList');
+      const countBadge = document.getElementById('issueNoticeCount');
+
+      if (!initData.issues || initData.issues.length === 0) {
+        box.style.background = '#f0fdf4';
+        box.style.borderColor = '#86efac';
+        countBadge.style.background = '#10b981';
+        countBadge.innerText = '0 項';
+        listContainer.innerHTML = '<div style="color:#166534; font-size:0.95rem; font-weight:bold; margin-top:4px;">🎉 本車目前裝備齊全，無待補充項目！</div>';
+        return;
+      }
+
+      const vehicleIssues = initData.issues.filter(i => String(i.Vehicle_Name).trim() === selectedVehicle);
+
+      if (vehicleIssues.length === 0) {
+        box.style.background = '#f0fdf4';
+        box.style.borderColor = '#86efac';
+        countBadge.style.background = '#10b981';
+        countBadge.innerText = '0 項';
+        listContainer.innerHTML = `<div style="color:#166534; font-size:0.95rem; font-weight:bold; margin-top:4px;">🎉 ${selectedVehicle} 車目前無待補充項目！</div>`;
+      } else {
+        box.style.background = '#fef2f2';
+        box.style.borderColor = '#fca5a5';
+        countBadge.style.background = '#ef4444';
+        countBadge.innerText = `${vehicleIssues.length} 項`;
+
+        listContainer.innerHTML = vehicleIssues.map(i => {
+          const name = i.Item_Name || i.itemName || '器材項目';
+          const val = i.Actual_Qty !== undefined ? i.Actual_Qty : '';
+          const std = i.Standard_Qty ? `(標準:${i.Standard_Qty})` : '';
+          const reason = i.Unresolved_Reason || '待處置';
+
+          return `
+            <div class="issue-item-tag">
+              <div>
+                <strong style="color:#991b1b; font-size:1rem;">• ${name}</strong>：現有數值 <span style="font-weight:bold; color:#ef4444;">${val}</span> <span style="font-size:0.85rem;">${std}</span>
+                <div style="color:#475569; font-size:0.85rem; font-weight:600; margin-top:2px;">說明：${reason}</div>
+              </div>
+              <button onclick="resolveIssueDirectly('${i.Issue_ID}')" style="background:#10b981; color:white; border:none; padding:6px 10px; border-radius:6px; font-weight:bold; font-size:0.88rem; cursor:pointer; white-space:nowrap; margin-left:8px;">✅ 已補充(結案)</button>
+            </div>
+          `;
+        }).join('');
+      }
+    }
+
+    function resolveIssueDirectly(issueId) {
+      const selectedUser = document.getElementById('userSelect').value;
+      if (!confirm("確認已完成補充並結案？")) return;
+
+      document.getElementById('loading').style.display = 'flex';
+
+      fetch(GAS_API_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain' },
+        body: JSON.stringify({
+          action: 'resolveIssue',
+          payload: { issueId: issueId, person: selectedUser }
+        })
+      })
+      .then(res => res.json())
+      .then(res => {
+        document.getElementById('loading').style.display = 'none';
+        if (res.success) {
+          alert("✅ 缺件項目已補充並完成結案！");
+          fetchInitData();
+        } else {
+          alert("結案失敗：" + res.error);
+        }
+      })
+      .catch(err => {
+        document.getElementById('loading').style.display = 'none';
+        alert("網路連線錯誤，請重試！");
       });
-
-      updateNavButtons();
     }
 
-    // 3. 互動邏輯
-    function changeQty(btn, delta, stdQty, warnMin) {
-      const stepper = btn.parentElement;
-      const valElem = stepper.querySelector('.stepper-val');
-      const row = btn.closest('.item-row');
-      const noteDrawer = row.nextElementSibling;
+    function parseCat2(cat2Str) {
+      const raw = String(cat2Str || '').trim();
+      const parts = raw.split(/[-—–－_]/).map(p => p.trim()).filter(Boolean);
+      if (parts.length > 1) {
+        return { main: parts[0], sub: parts.slice(1).join('-') };
+      }
+      return { main: raw, sub: '' };
+    }
 
-      let current = parseInt(valElem.innerText, 10) || 0;
-      let updated = Math.max(0, current + delta);
-      valElem.innerText = updated;
+    function getGroupTheme(cat1, mainCat) {
+      cat1 = String(cat1 || '');
+      mainCat = String(mainCat || '');
 
-      // 判斷是否觸發短缺警示 (小於 Standard_Qty 或 Warning_Min)
+      if (mainCat.includes('急救包')) {
+        return { icon: '🎒', headerBg: '#dc2626', headerColor: '#ffffff', borderColor: '#fca5a5' };
+      } else if (mainCat.includes('攜帶氧') || mainCat.includes('氧氣')) {
+        return { icon: '🫁', headerBg: '#0284c7', headerColor: '#ffffff', borderColor: '#7dd3fc' };
+      } else if (mainCat.includes('ZOLL') || mainCat.includes('電擊') || mainCat.includes('心導管')) {
+        return { icon: '⚡', headerBg: '#d97706', headerColor: '#ffffff', borderColor: '#fcd34d' };
+      } else if (cat1.includes('第三部') || mainCat.includes('產包') || mainCat.includes('燒燙傷') || mainCat.includes('大傷')) {
+        return { icon: '📦', headerBg: '#7e22ce', headerColor: '#ffffff', borderColor: '#d8b4fe' };
+      } else {
+        return { icon: '📋', headerBg: '#334155', headerColor: '#ffffff', borderColor: '#cbd5e1' };
+      }
+    }
+
+    function getShortName(name) {
+      if (name.includes('第一部')) return '1. 急救包/包紮';
+      if (name.includes('第二部')) return '2. 車上固定裝備';
+      if (name.includes('第三部')) return '3. 特殊急救套組';
+      return name;
+    }
+
+    // ⚡ 精簡橫向卡片生成邏輯
+    function createItemRowElement(item) {
+      const isMandatory = item.Input_Type === 'mandatory_number';
+      const isQty = item.Input_Type === 'optional_qty';
+      const stdQty = parseInt(item.Standard_Qty, 10) || 0;
+      const warnMin = parseInt(item.Warning_Min, 10) || 0;
+
+      const container = document.createElement('div');
+      
+      const itemRow = document.createElement('div');
+      itemRow.className = 'item-row';
+      itemRow.setAttribute('data-id', item.Item_ID);
+      itemRow.setAttribute('data-std', stdQty);
+      if (isMandatory) {
+        itemRow.style.borderLeft = '5px solid #f59e0b';
+        itemRow.setAttribute('data-mandatory', 'true');
+      }
+
+      let rightControlHtml = '';
+      if (isMandatory) {
+        rightControlHtml = `
+          <div class="quick-preset-wrap">
+            <div class="quick-preset-btns">
+              <button type="button" class="btn-preset" onclick="setPressure('${item.Item_ID}', 2200, ${warnMin})">2200</button>
+              <button type="button" class="btn-preset" onclick="setPressure('${item.Item_ID}', 1500, ${warnMin})">1500</button>
+              <button type="button" class="btn-preset" onclick="setPressure('${item.Item_ID}', 1000, ${warnMin})">1000</button>
+            </div>
+            <input type="tel" inputmode="numeric" pattern="[0-9]*" id="input_${item.Item_ID}" class="pressure-input" placeholder="psi" required oninput="checkPressure(this, ${warnMin})">
+          </div>
+        `;
+      } else if (isQty) {
+        rightControlHtml = `
+          <div class="stepper">
+            <button type="button" class="btn-step" onclick="changeQty('${item.Item_ID}', -1, ${stdQty}, ${warnMin})">-</button>
+            <input type="tel" inputmode="numeric" pattern="[0-9]*" id="input_${item.Item_ID}" class="stepper-input" value="${stdQty}" oninput="checkQtyInput(this, ${stdQty}, ${warnMin})">
+            <button type="button" class="btn-step" onclick="changeQty('${item.Item_ID}', 1, ${stdQty}, ${warnMin})">+</button>
+          </div>
+        `;
+      } else {
+        rightControlHtml = `
+          <select id="input_${item.Item_ID}" class="status-select" onchange="toggleStatusNote(this)">
+            <option value="正常">✅ 正常 / 完整</option>
+            <option value="異常">❌ 異常 / 缺失</option>
+          </select>
+        `;
+      }
+
+      itemRow.innerHTML = `
+        <div class="item-left">
+          <div class="item-title-wrap">
+            <span class="item-name">${item.Item_Name}</span>
+            ${isQty ? `<span class="item-std-tag">應備 ${stdQty}</span>` : ''}
+            ${isMandatory ? '<span style="color:#d97706; font-size:0.8rem; font-weight:bold;">⚠️ 關鍵數據</span>' : ''}
+          </div>
+          ${item.Item_Hint ? `<span class="item-sub-hint">${item.Item_Hint}</span>` : ''}
+        </div>
+        <div class="item-right">${rightControlHtml}</div>
+      `;
+
+      const noteDrawer = document.createElement('div');
+      noteDrawer.className = 'note-drawer';
+      noteDrawer.id = `drawer_${item.Item_ID}`;
+      noteDrawer.innerHTML = `<input type="text" id="note_${item.Item_ID}" class="note-input" placeholder="⚠️ 請填寫未補齊或異常原因">`;
+
+      container.appendChild(itemRow);
+      container.appendChild(noteDrawer);
+      return container;
+    }
+
+    /* 步進器與自動抽屜控制邏輯 */
+    function changeQty(itemId, delta, stdQty, warnMin) {
+      const input = document.getElementById(`input_${itemId}`);
+      let val = parseInt(input.value, 10) || 0;
+      val = Math.max(0, val + delta);
+      input.value = val;
+      checkQtyInput(input, stdQty, warnMin);
+    }
+
+    function checkQtyInput(input, stdQty, warnMin) {
+      const val = parseInt(input.value, 10) || 0;
+      const row = input.closest('.item-row');
+      const drawer = row.nextElementSibling;
       const threshold = warnMin > 0 ? warnMin : stdQty;
-      if (updated < threshold) {
-        valElem.classList.add('val-low');
+
+      if (val < threshold) {
+        input.classList.add('val-low');
         row.classList.add('is-abnormal');
-        if (noteDrawer) noteDrawer.style.display = 'block';
+        drawer.style.display = 'block';
       } else {
-        valElem.classList.remove('val-low');
+        input.classList.remove('val-low');
         row.classList.remove('is-abnormal');
-        if (noteDrawer) noteDrawer.style.display = 'none';
+        drawer.style.display = 'none';
       }
     }
 
-    function toggleStatusNote(select) {
-      const row = select.closest('.item-row');
-      const noteDrawer = row.nextElementSibling;
-      if (select.value === '異常') {
-        row.classList.add('is-abnormal');
-        if (noteDrawer) noteDrawer.style.display = 'block';
-      } else {
-        row.classList.remove('is-abnormal');
-        if (noteDrawer) noteDrawer.style.display = 'none';
-      }
-    }
-
-    function setPressure(inputId, val, warnMin) {
-      const input = document.getElementById(inputId);
+    function setPressure(itemId, val, warnMin) {
+      const input = document.getElementById(`input_${itemId}`);
       if (input) {
         input.value = val;
         checkPressure(input, warnMin);
@@ -376,27 +544,51 @@
     function checkPressure(input, warnMin) {
       const val = parseFloat(input.value) || 0;
       const row = input.closest('.item-row');
-      const noteDrawer = row.nextElementSibling;
+      const drawer = row.nextElementSibling;
       const limit = warnMin > 0 ? warnMin : 1000;
 
       if (val < limit) {
         row.classList.add('is-abnormal');
-        if (noteDrawer) noteDrawer.style.display = 'block';
+        drawer.style.display = 'block';
       } else {
         row.classList.remove('is-abnormal');
-        if (noteDrawer) noteDrawer.style.display = 'none';
+        drawer.style.display = 'none';
+      }
+    }
+
+    function toggleStatusNote(select) {
+      const row = select.closest('.item-row');
+      const drawer = row.nextElementSibling;
+      if (select.value === '異常') {
+        row.classList.add('is-abnormal');
+        drawer.style.display = 'block';
+      } else {
+        row.classList.remove('is-abnormal');
+        drawer.style.display = 'none';
       }
     }
 
     function quickFillAll() {
-      const currentTab = document.getElementById(`tab_${currentStep}`);
+      const currentTab = document.getElementById(`tabContent_${currentStep}`);
       currentTab.querySelectorAll('.item-row[data-std]').forEach(row => {
-        const std = parseInt(row.getAttribute('data-std'), 10);
-        const valElem = row.querySelector('.stepper-val');
-        if (valElem) { valElem.innerText = std; valElem.classList.remove('val-low'); }
+        const itemId = row.getAttribute('data-id');
+        const stdQty = parseInt(row.getAttribute('data-std'), 10);
+        const input = document.getElementById(`input_${itemId}`);
+        if (input && input.classList.contains('stepper-input')) {
+          input.value = stdQty;
+          input.classList.remove('val-low');
+        }
         row.classList.remove('is-abnormal');
-        const note = row.nextElementSibling;
-        if (note && note.classList.contains('note-drawer')) note.style.display = 'none';
+        const drawer = document.getElementById(`drawer_${itemId}`);
+        if (drawer) drawer.style.display = 'none';
+      });
+
+      currentTab.querySelectorAll('.status-select').forEach(select => {
+        select.value = "正常";
+        const row = select.closest('.item-row');
+        row.classList.remove('is-abnormal');
+        const drawer = row.nextElementSibling;
+        if (drawer) drawer.style.display = 'none';
       });
     }
 
@@ -410,111 +602,283 @@
       });
     }
 
-    function switchTab(index) {
-      currentStep = index;
-      document.querySelectorAll('.tab-panel').forEach((panel, i) => panel.style.display = i === currentStep ? 'block' : 'none');
-      document.querySelectorAll('.step-btn').forEach((btn, i) => btn.classList.toggle('active', i === currentStep));
-      updateNavButtons();
+    function renderItems() {
+      const selectedVehicle = String(document.getElementById('vehicleSelect').value || '');
+      const stepNav = document.getElementById('stepNav');
+      const tabsContainer = document.getElementById('tabsContainer');
+      
+      stepNav.innerHTML = '';
+      tabsContainer.innerHTML = '';
+      currentStep = 0;
+
+      const filteredItems = initData.items.filter(item => {
+        const scope = String(item.Vehicle_Scope || 'ALL').trim();
+        if (scope === 'ALL' || scope === '') return true;
+        return scope.split(',').map(s => s.trim()).includes(selectedVehicle);
+      });
+
+      categories1List = [...new Set(filteredItems.map(i => i.Category_1))].filter(Boolean);
+      totalSteps = categories1List.length;
+
+      categories1List.forEach((cat1, index) => {
+        const btn = document.createElement('button');
+        btn.className = `step-btn ${index === 0 ? 'active' : ''}`;
+        btn.id = `stepBtn_${index}`;
+        btn.innerText = getShortName(cat1);
+        btn.onclick = () => jumpToStep(index);
+        stepNav.appendChild(btn);
+
+        const tabContent = document.createElement('div');
+        tabContent.className = `tab-content ${index === 0 ? 'active' : ''}`;
+        tabContent.id = `tabContent_${index}`;
+
+        const cat1Items = filteredItems.filter(i => i.Category_1 === cat1);
+
+        const mainCatMap = new Map();
+        cat1Items.forEach(item => {
+          const { main } = parseCat2(item.Category_2);
+          if (!mainCatMap.has(main)) {
+            mainCatMap.set(main, []);
+          }
+          mainCatMap.get(main).push(item);
+        });
+
+        mainCatMap.forEach((itemsInMain, mainCat) => {
+          const theme = getGroupTheme(cat1, mainCat);
+
+          const groupBox = document.createElement('div');
+          groupBox.className = 'group-box';
+          groupBox.style.borderColor = theme.borderColor;
+
+          const groupHeader = document.createElement('div');
+          groupHeader.className = 'group-header';
+          groupHeader.style.backgroundColor = theme.headerBg;
+          groupHeader.style.color = theme.headerColor;
+          groupHeader.innerHTML = `
+            <span>${theme.icon} ${mainCat}</span>
+            <span style="font-size:0.85rem; font-weight:normal; opacity:0.95;">完整內容物檢查</span>
+          `;
+          groupBox.appendChild(groupHeader);
+
+          const directItems = [];
+          const subMap = new Map();
+
+          itemsInMain.forEach(item => {
+            const { sub } = parseCat2(item.Category_2);
+            if (!sub) {
+              directItems.push(item);
+            } else {
+              if (!subMap.has(sub)) {
+                subMap.set(sub, []);
+              }
+              subMap.get(sub).push(item);
+            }
+          });
+
+          directItems.forEach(item => {
+            groupBox.appendChild(createItemRowElement(item));
+          });
+
+          subMap.forEach((subItems, subName) => {
+            const subPackBox = document.createElement('div');
+            subPackBox.className = 'sub-pack-box';
+
+            const subHeader = document.createElement('div');
+            subHeader.className = 'sub-pack-header';
+            subHeader.innerHTML = `👝 內層小包：<strong>${subName}</strong>`;
+            subPackBox.appendChild(subHeader);
+
+            subItems.forEach(item => {
+              subPackBox.appendChild(createItemRowElement(item));
+            });
+
+            groupBox.appendChild(subPackBox);
+          });
+
+          tabContent.appendChild(groupBox);
+        });
+
+        tabsContainer.appendChild(tabContent);
+      });
+
+      updateStepUI();
+    }
+
+    function updateStepUI() {
+      const contents = document.querySelectorAll('.tab-content');
+      contents.forEach((content, idx) => {
+        if (idx === currentStep) content.classList.add('active');
+        else content.classList.remove('active');
+      });
+
+      const buttons = document.querySelectorAll('.step-btn');
+      buttons.forEach((btn, idx) => {
+        if (idx === currentStep) btn.classList.add('active');
+        else btn.classList.remove('active');
+      });
+
+      const prevBtn = document.getElementById('prevBtn');
+      const nextBtn = document.getElementById('nextBtn');
+      const noteGroup = document.getElementById('generalNoteGroup');
+
+      if (currentStep === 0) {
+        prevBtn.style.display = 'none';
+      } else {
+        prevBtn.style.display = 'block';
+      }
+
+      if (currentStep === totalSteps - 1) {
+        nextBtn.innerText = '🚀 完成並送出檢查單';
+        nextBtn.style.backgroundColor = '#10b981';
+        noteGroup.style.display = 'block';
+      } else {
+        const nextCatName = getShortName(categories1List[currentStep + 1]);
+        nextBtn.innerText = `下一步：${nextCatName} ➔`;
+        nextBtn.style.backgroundColor = 'var(--primary)';
+        noteGroup.style.display = 'none';
+      }
+
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
-    function updateNavButtons() {
-      const prevBtn = document.getElementById('prevBtn');
-      const nextBtn = document.getElementById('nextBtn');
-      prevBtn.style.display = currentStep === 0 ? 'none' : 'block';
-      if (currentStep === cat1List.length - 1) {
-        nextBtn.innerText = "🚀 送出清點紀錄至試算表";
-        nextBtn.style.background = "var(--success)";
+    function goToNextStep() {
+      const currentTab = document.getElementById(`tabContent_${currentStep}`);
+      const requiredInputs = currentTab.querySelectorAll('input[required]');
+      let missing = false;
+
+      requiredInputs.forEach(input => {
+        if (!input.value) {
+          missing = true;
+          input.style.borderColor = '#ef4444';
+        } else {
+          input.style.borderColor = '#cbd5e1';
+        }
+      });
+
+      if (missing) {
+        alert("⚠️ 請填寫本頁的必填數據（氣壓或電量）後再進入下一步！");
+        return;
+      }
+
+      if (currentStep === totalSteps - 1) {
+        submitCheck();
       } else {
-        nextBtn.innerText = "下一步 ➔";
-        nextBtn.style.background = "var(--primary)";
+        currentStep++;
+        updateStepUI();
       }
     }
 
-    function stepChange(delta) {
-      if (currentStep + delta >= cat1List.length) {
-        submitData();
-        return;
+    function goToPrevStep() {
+      if (currentStep > 0) {
+        currentStep--;
+        updateStepUI();
       }
-      switchTab(currentStep + delta);
     }
 
-    // 4. 送出資料至 Apps Script (對應 doPost action=submitCheck)
-    async function submitData() {
-      const checker = document.getElementById('userSelect').value;
-      const vehicleName = document.getElementById('vehicleSelect').value;
+    function jumpToStep(targetStep) {
+      if (targetStep > currentStep) {
+        const currentTab = document.getElementById(`tabContent_${currentStep}`);
+        const requiredInputs = currentTab.querySelectorAll('input[required]');
+        let missing = false;
 
-      if (!checker) {
-        alert("⚠️ 請先在頂部選擇「檢查同仁」！");
-        return;
+        requiredInputs.forEach(input => {
+          if (!input.value) {
+            missing = true;
+            input.style.borderColor = '#ef4444';
+          }
+        });
+
+        if (missing) {
+          alert("⚠️ 請先完成本頁的必填數據（氣壓或電量）！");
+          return;
+        }
       }
+      currentStep = targetStep;
+      updateStepUI();
+    }
 
-      document.getElementById('loading').style.display = 'flex';
-      document.getElementById('loading').querySelector('div').innerText = '⏳ 寫入試算表中...';
+    function submitCheck() {
+      const selectedVehicle = String(document.getElementById('vehicleSelect').value || '');
+      const selectedUser = String(document.getElementById('userSelect').value || '');
+      
+      const filteredItems = initData.items.filter(item => {
+        const scope = String(item.Vehicle_Scope || 'ALL').trim();
+        if (scope === 'ALL' || scope === '') return true;
+        return scope.split(',').map(s => s.trim()).includes(selectedVehicle);
+      });
 
-      const itemsPayload = [];
+      let payloadItems = [];
+      let missingMandatory = false;
 
-      document.querySelectorAll('.item-row').forEach(row => {
-        const itemId = row.getAttribute('data-id');
-        const itemName = row.getAttribute('data-name');
-        const stdQty = row.getAttribute('data-std') || '';
-        const isAbnormal = row.classList.contains('is-abnormal');
-        const noteInput = row.nextElementSibling ? row.nextElementSibling.querySelector('.note-input') : null;
+      filteredItems.forEach(item => {
+        const valInput = document.getElementById(`input_${item.Item_ID}`);
+        const noteInput = document.getElementById(`note_${item.Item_ID}`);
+        const val = valInput ? valInput.value : '';
+        const note = noteInput ? noteInput.value : '';
 
-        let val = '';
-        const stepperVal = row.querySelector('.stepper-val');
-        const pressureInput = row.querySelector('.pressure-input');
-        const statusSelect = row.querySelector('.status-select');
+        if (item.Input_Type === 'mandatory_number' && !val) {
+          missingMandatory = true;
+        }
 
-        if (stepperVal) val = stepperVal.innerText;
-        else if (pressureInput) val = pressureInput.value;
-        else if (statusSelect) val = statusSelect.value;
+        let isAbnormal = false;
+        if (item.Input_Type === 'mandatory_number') {
+          if (parseFloat(val) < parseFloat(item.Warning_Min)) isAbnormal = true;
+        } else if (item.Input_Type === 'optional_qty') {
+          if (parseFloat(val) < parseFloat(item.Warning_Min)) isAbnormal = true;
+        } else if (val === '異常') {
+          isAbnormal = true;
+        }
 
-        itemsPayload.push({
-          itemId: itemId,
-          itemName: itemName,
+        payloadItems.push({
+          itemId: item.Item_ID,
+          itemName: item.Item_Name,
           inputValue: val,
+          standardQty: item.Standard_Qty || '',
           isAbnormal: isAbnormal,
-          itemNote: noteInput ? noteInput.value : '',
-          standardQty: stdQty
+          itemNote: note
         });
       });
 
-      const bodyData = {
-        action: "submitCheck",
-        sessionToken: sessionToken,
-        honeypot: "",
-        payload: {
-          vehicleName: vehicleName,
-          checker: checker,
-          generalNote: "",
-          items: itemsPayload
-        }
+      if (missingMandatory) {
+        alert("⚠️ 請確實填寫所有頁面的電量與氣壓數值！");
+        return;
+      }
+
+      const payload = {
+        vehicleName: selectedVehicle,
+        checker: selectedUser,
+        generalNote: document.getElementById('generalNote').value,
+        items: payloadItems
       };
 
-      try {
-        const response = await fetch(GAS_URL, {
-          method: 'POST',
-          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-          body: JSON.stringify(bodyData)
-        });
-        const res = await response.json();
+      document.getElementById('loading').style.display = 'flex';
 
+      fetch(GAS_API_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain' },
+        body: JSON.stringify({
+          action: 'submitCheck',
+          sessionToken: currentSessionToken,
+          honeypot: document.getElementById('website_hp').value,
+          payload: payload
+        })
+      })
+      .then(res => res.json())
+      .then(res => {
+        document.getElementById('loading').style.display = 'none';
         if (res.success) {
-          alert("🎉 清點紀錄已成功寫入 Google 試算表！");
+          alert("✅ 每日檢查單送出成功！單號：" + res.checkId);
           location.reload();
         } else {
-          alert("❌ 寫入失敗：" + res.error);
+          alert(res.error);
         }
-      } catch (err) {
-        console.error(err);
-        alert("❌ 傳送過程發生錯誤，請檢查網路。");
-      } finally {
+      })
+      .catch(err => {
         document.getElementById('loading').style.display = 'none';
-      }
+        alert("網路連線錯誤，請重試！");
+        console.error(err);
+      });
     }
-
-    document.addEventListener("DOMContentLoaded", initSystem);
   </script>
 </body>
 </html>
