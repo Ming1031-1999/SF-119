@@ -107,7 +107,7 @@
       align-items: center;
     }
 
-    /* ⚡ 快捷列 (一鍵全齊 / 過慮) */
+    /* ⚡ 快捷列 */
     .quick-toolbar { display: flex; gap: 8px; margin-bottom: 12px; }
     .btn-quick-fill {
       flex: 1.2; background: var(--success-bg); color: #065f46;
@@ -152,7 +152,7 @@
       justify-content: space-between;
     }
 
-    /* 👝 內層小包 (如 血糖包、IV包) */
+    /* 👝 內層小包 */
     .sub-pack-box {
       background: #f8fafc;
       border: 1.5px dashed #64748b;
@@ -196,11 +196,6 @@
       border: none; background: white; padding: 0; height: 36px; outline: none;
     }
     .stepper-input.val-low { color: var(--danger); background: #fee2e2; }
-
-    .quick-preset-wrap { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; }
-    .quick-preset-btns { display: flex; gap: 4px; }
-    .btn-preset { background: #e2e8f0; color: #1e293b; border: none; border-radius: 4px; padding: 3px 6px; font-size: 0.78rem; font-weight: 800; cursor: pointer; }
-    .pressure-input { width: 86px; height: 36px; padding: 4px 8px; border: 1.5px solid #cbd5e1; border-radius: 6px; font-weight: 900; font-size: 1.05rem; text-align: right; }
 
     .status-select { height: 36px; padding: 0 6px; border: 1.5px solid #cbd5e1; border-radius: 8px; font-weight: 800; font-size: 0.9rem; background: white; }
 
@@ -247,7 +242,6 @@
     <select id="vehicleSelect" onchange="onVehicleChange()"></select>
   </div>
 
-  <!-- 🚨 動態待補充 / 更換器材看板 -->
   <div id="issueNoticeBox" class="issue-notice-box">
     <div class="issue-notice-title">
       <span>🚨 本車目前待補充 / 更換器材：</span>
@@ -438,7 +432,7 @@
       return name;
     }
 
-    // ⚡ 精簡橫向卡片生成邏輯
+    // ⚡ 精簡橫向卡片生成邏輯（含免填數字免鍵盤機制）
     function createItemRowElement(item) {
       const isMandatory = item.Input_Type === 'mandatory_number';
       const isQty = item.Input_Type === 'optional_qty';
@@ -452,21 +446,18 @@
       itemRow.setAttribute('data-id', item.Item_ID);
       itemRow.setAttribute('data-std', stdQty);
       if (isMandatory) {
-        itemRow.style.borderLeft = '5px solid #f59e0b';
+        itemRow.style.borderLeft = '5px solid #059669'; // 關鍵數據預設綠色達標邊框
         itemRow.setAttribute('data-mandatory', 'true');
       }
 
       let rightControlHtml = '';
       if (isMandatory) {
+        // 電量與氣壓關鍵數據：預設「✅ 達標 (高於標準)」，免輸入數字
         rightControlHtml = `
-          <div class="quick-preset-wrap">
-            <div class="quick-preset-btns">
-              <button type="button" class="btn-preset" onclick="setPressure('${item.Item_ID}', 2200, ${warnMin})">2200</button>
-              <button type="button" class="btn-preset" onclick="setPressure('${item.Item_ID}', 1500, ${warnMin})">1500</button>
-              <button type="button" class="btn-preset" onclick="setPressure('${item.Item_ID}', 1000, ${warnMin})">1000</button>
-            </div>
-            <input type="tel" inputmode="numeric" pattern="[0-9]*" id="input_${item.Item_ID}" class="pressure-input" placeholder="psi" required oninput="checkPressure(this, ${warnMin})">
-          </div>
+          <select id="input_${item.Item_ID}" class="status-select" onchange="toggleStatusNote(this)">
+            <option value="✅ 達標 (高於標準)">✅ 達標 (標準以上)</option>
+            <option value="異常">❌ 低於標準/待處理</option>
+          </select>
         `;
       } else if (isQty) {
         rightControlHtml = `
@@ -490,7 +481,7 @@
           <div class="item-title-wrap">
             <span class="item-name">${item.Item_Name}</span>
             ${isQty ? `<span class="item-std-tag">應備 ${stdQty}</span>` : ''}
-            ${isMandatory ? '<span style="color:#d97706; font-size:0.8rem; font-weight:bold;">⚠️ 關鍵數據</span>' : ''}
+            ${isMandatory ? '<span style="color:#059669; font-size:0.82rem; font-weight:bold;">⚠️ 關鍵數據</span>' : ''}
           </div>
           ${item.Item_Hint ? `<span class="item-sub-hint">${item.Item_Hint}</span>` : ''}
         </div>
@@ -500,7 +491,7 @@
       const noteDrawer = document.createElement('div');
       noteDrawer.className = 'note-drawer';
       noteDrawer.id = `drawer_${item.Item_ID}`;
-      noteDrawer.innerHTML = `<input type="text" id="note_${item.Item_ID}" class="note-input" placeholder="⚠️ 請填寫未補齊或異常原因">`;
+      noteDrawer.innerHTML = `<input type="text" id="note_${item.Item_ID}" class="note-input" placeholder="⚠️ 請填寫數值低於標準原因（選填）">`;
 
       container.appendChild(itemRow);
       container.appendChild(noteDrawer);
@@ -533,37 +524,20 @@
       }
     }
 
-    function setPressure(itemId, val, warnMin) {
-      const input = document.getElementById(`input_${itemId}`);
-      if (input) {
-        input.value = val;
-        checkPressure(input, warnMin);
-      }
-    }
-
-    function checkPressure(input, warnMin) {
-      const val = parseFloat(input.value) || 0;
-      const row = input.closest('.item-row');
-      const drawer = row.nextElementSibling;
-      const limit = warnMin > 0 ? warnMin : 1000;
-
-      if (val < limit) {
-        row.classList.add('is-abnormal');
-        drawer.style.display = 'block';
-      } else {
-        row.classList.remove('is-abnormal');
-        drawer.style.display = 'none';
-      }
-    }
-
     function toggleStatusNote(select) {
       const row = select.closest('.item-row');
       const drawer = row.nextElementSibling;
       if (select.value === '異常') {
         row.classList.add('is-abnormal');
+        if (row.hasAttribute('data-mandatory')) {
+          row.style.borderLeftColor = '#dc2626';
+        }
         drawer.style.display = 'block';
       } else {
         row.classList.remove('is-abnormal');
+        if (row.hasAttribute('data-mandatory')) {
+          row.style.borderLeftColor = '#059669';
+        }
         drawer.style.display = 'none';
       }
     }
@@ -584,9 +558,12 @@
       });
 
       currentTab.querySelectorAll('.status-select').forEach(select => {
-        select.value = "正常";
+        select.selectedIndex = 0; // 回復為第一項達標/正常
         const row = select.closest('.item-row');
         row.classList.remove('is-abnormal');
+        if (row.hasAttribute('data-mandatory')) {
+          row.style.borderLeftColor = '#059669';
+        }
         const drawer = row.nextElementSibling;
         if (drawer) drawer.style.display = 'none';
       });
@@ -742,24 +719,6 @@
     }
 
     function goToNextStep() {
-      const currentTab = document.getElementById(`tabContent_${currentStep}`);
-      const requiredInputs = currentTab.querySelectorAll('input[required]');
-      let missing = false;
-
-      requiredInputs.forEach(input => {
-        if (!input.value) {
-          missing = true;
-          input.style.borderColor = '#ef4444';
-        } else {
-          input.style.borderColor = '#cbd5e1';
-        }
-      });
-
-      if (missing) {
-        alert("⚠️ 請填寫本頁的必填數據（氣壓或電量）後再進入下一步！");
-        return;
-      }
-
       if (currentStep === totalSteps - 1) {
         submitCheck();
       } else {
@@ -776,23 +735,6 @@
     }
 
     function jumpToStep(targetStep) {
-      if (targetStep > currentStep) {
-        const currentTab = document.getElementById(`tabContent_${currentStep}`);
-        const requiredInputs = currentTab.querySelectorAll('input[required]');
-        let missing = false;
-
-        requiredInputs.forEach(input => {
-          if (!input.value) {
-            missing = true;
-            input.style.borderColor = '#ef4444';
-          }
-        });
-
-        if (missing) {
-          alert("⚠️ 請先完成本頁的必填數據（氣壓或電量）！");
-          return;
-        }
-      }
       currentStep = targetStep;
       updateStepUI();
     }
@@ -808,7 +750,6 @@
       });
 
       let payloadItems = [];
-      let missingMandatory = false;
 
       filteredItems.forEach(item => {
         const valInput = document.getElementById(`input_${item.Item_ID}`);
@@ -816,13 +757,9 @@
         const val = valInput ? valInput.value : '';
         const note = noteInput ? noteInput.value : '';
 
-        if (item.Input_Type === 'mandatory_number' && !val) {
-          missingMandatory = true;
-        }
-
         let isAbnormal = false;
         if (item.Input_Type === 'mandatory_number') {
-          if (parseFloat(val) < parseFloat(item.Warning_Min)) isAbnormal = true;
+          if (val === '異常' || val.includes('低於標準')) isAbnormal = true;
         } else if (item.Input_Type === 'optional_qty') {
           if (parseFloat(val) < parseFloat(item.Warning_Min)) isAbnormal = true;
         } else if (val === '異常') {
@@ -838,11 +775,6 @@
           itemNote: note
         });
       });
-
-      if (missingMandatory) {
-        alert("⚠️ 請確實填寫所有頁面的電量與氣壓數值！");
-        return;
-      }
 
       const payload = {
         vehicleName: selectedVehicle,
