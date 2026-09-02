@@ -3,30 +3,24 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>救護車輛與裝備器材清點系統</title>
+  <title>SF-119 救護車輛與器材清點系統</title>
   <style>
     :root {
       --primary: #1e3a8a;
-      --primary-hover: #1e40af;
       --success: #059669;
       --success-bg: #ecfdf5;
       --danger: #dc2626;
       --danger-bg: #fef2f2;
-      --warning: #d97706;
       --bg: #f1f5f9;
-      --card-bg: #ffffff;
       --border: #cbd5e1;
       --text: #0f172a;
       --text-sub: #475569;
     }
 
-    * {
-      box-sizing: border-box;
-      -webkit-tap-highlight-color: transparent;
-    }
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 
     body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
       background-color: var(--bg);
       color: var(--text);
       margin: 0;
@@ -46,335 +40,79 @@
       align-items: center;
       box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
     }
-    .top-header h1 {
-      margin: 0;
-      font-size: 1.2rem;
-      font-weight: 800;
-    }
-    .top-header p {
-      margin: 2px 0 0 0;
-      font-size: 0.8rem;
-      opacity: 0.85;
-    }
+    .top-header h1 { margin: 0; font-size: 1.2rem; font-weight: 800; }
+    .top-header p { margin: 2px 0 0 0; font-size: 0.8rem; opacity: 0.85; }
 
-    .quick-toolbar {
-      display: flex;
-      gap: 8px;
-      margin-bottom: 10px;
-    }
+    .quick-toolbar { display: flex; gap: 8px; margin-bottom: 10px; }
     .btn-quick-fill {
-      flex: 1.2;
-      background: var(--success-bg);
-      color: #065f46;
-      border: 1.5px solid #a7f3d0;
-      padding: 10px;
-      border-radius: 8px;
-      font-weight: 800;
-      font-size: 0.9rem;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 4px;
-      cursor: pointer;
+      flex: 1.2; background: var(--success-bg); color: #065f46;
+      border: 1.5px solid #a7f3d0; padding: 10px; border-radius: 8px;
+      font-weight: 800; font-size: 0.9rem; display: flex; align-items: center;
+      justify-content: center; gap: 4px; cursor: pointer;
     }
     .btn-toggle-filter {
-      flex: 1;
-      background: #ffffff;
-      color: #334155;
-      border: 1.5px solid var(--border);
-      padding: 10px;
-      border-radius: 8px;
-      font-weight: 700;
-      font-size: 0.88rem;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
+      flex: 1; background: #ffffff; color: #334155;
+      border: 1.5px solid var(--border); padding: 10px; border-radius: 8px;
+      font-weight: 700; font-size: 0.88rem; cursor: pointer;
     }
-    .btn-toggle-filter.active {
-      background: var(--danger-bg);
-      color: #991b1b;
-      border-color: #fca5a5;
-    }
+    .btn-toggle-filter.active { background: var(--danger-bg); color: #991b1b; border-color: #fca5a5; }
 
-    .step-nav {
-      display: flex;
-      gap: 6px;
-      margin-bottom: 10px;
-      overflow-x: auto;
-    }
+    .step-nav { display: flex; gap: 6px; margin-bottom: 10px; overflow-x: auto; }
     .step-btn {
-      flex: 1;
-      min-width: 100px;
-      padding: 9px 4px;
-      background: #e2e8f0;
-      color: #475569;
-      border: none;
-      border-radius: 8px;
-      font-size: 0.9rem;
-      font-weight: 800;
-      text-align: center;
-      cursor: pointer;
-      white-space: nowrap;
+      flex: 1; min-width: 100px; padding: 9px 4px; background: #e2e8f0;
+      color: #475569; border: none; border-radius: 8px; font-size: 0.9rem;
+      font-weight: 800; text-align: center; cursor: pointer; white-space: nowrap;
     }
-    .step-btn.active {
-      background: var(--primary);
-      color: white;
-      box-shadow: 0 2px 4px rgba(30,58,138,0.25);
-    }
+    .step-btn.active { background: var(--primary); color: white; }
 
-    .group-box {
-      border: 1.5px solid #cbd5e1;
-      border-radius: 12px;
-      padding: 10px;
-      margin-bottom: 12px;
-      background: #ffffff;
-    }
-    .group-header {
-      font-size: 1.05rem;
-      font-weight: 900;
-      padding: 6px 10px;
-      border-radius: 6px;
-      margin-bottom: 8px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      color: white;
-    }
-
-    .sub-pack-box {
-      background: #f8fafc;
-      border: 1.5px dashed #94a3b8;
-      border-radius: 10px;
-      padding: 8px;
-      margin: 8px 0;
-    }
-    .sub-pack-header {
-      font-size: 0.95rem;
-      font-weight: 800;
-      color: #1e293b;
-      padding-bottom: 4px;
-      border-bottom: 1px solid #e2e8f0;
-      margin-bottom: 6px;
-    }
+    .group-box { border: 1.5px solid #cbd5e1; border-radius: 12px; padding: 10px; margin-bottom: 12px; background: #ffffff; }
+    .group-header { font-size: 1.05rem; font-weight: 900; padding: 6px 10px; border-radius: 6px; margin-bottom: 8px; color: white; background: #1e3a8a; }
 
     .item-row {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 8px 10px;
-      background: #ffffff;
-      border: 1px solid #e2e8f0;
-      border-radius: 8px;
-      margin-bottom: 6px;
-      min-height: 48px;
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 8px 10px; background: #ffffff; border: 1px solid #e2e8f0;
+      border-radius: 8px; margin-bottom: 6px; min-height: 48px;
     }
-    .item-row.is-abnormal {
-      border-color: #fca5a5;
-      background-color: var(--danger-bg);
-    }
+    .item-row.is-abnormal { border-color: #fca5a5; background-color: var(--danger-bg); }
 
-    .item-left {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      padding-right: 8px;
-    }
-    .item-title-wrap {
-      display: flex;
-      align-items: baseline;
-      gap: 6px;
-      flex-wrap: wrap;
-    }
-    .item-name {
-      font-weight: 800;
-      font-size: 1.05rem;
-      color: #0f172a;
-    }
-    .item-std-tag {
-      font-size: 0.85rem;
-      font-weight: 800;
-      color: #0284c7;
-      background: #e0f2fe;
-      padding: 1px 6px;
-      border-radius: 4px;
-      white-space: nowrap;
-    }
-    .item-sub-hint {
-      font-size: 0.8rem;
-      color: var(--text-sub);
-      margin-top: 1px;
-    }
+    .item-left { flex: 1; display: flex; flex-direction: column; justify-content: center; padding-right: 8px; }
+    .item-title-wrap { display: flex; align-items: baseline; gap: 6px; flex-wrap: wrap; }
+    .item-name { font-weight: 800; font-size: 1.05rem; color: #0f172a; }
+    .item-std-tag { font-size: 0.85rem; font-weight: 800; color: #0284c7; background: #e0f2fe; padding: 1px 6px; border-radius: 4px; }
+    .item-sub-hint { font-size: 0.8rem; color: var(--text-sub); margin-top: 1px; }
 
-    .item-right {
-      display: flex;
-      align-items: center;
-      gap: 4px;
-      flex-shrink: 0;
-    }
+    .stepper { display: flex; align-items: center; border: 1.5px solid #cbd5e1; border-radius: 8px; overflow: hidden; background: #f8fafc; }
+    .btn-step { width: 36px; height: 36px; border: none; background: #f1f5f9; color: #1e293b; font-size: 1.2rem; font-weight: 900; cursor: pointer; }
+    .stepper-val { width: 40px; text-align: center; font-weight: 900; font-size: 1.15rem; color: #0f172a; height: 36px; line-height: 36px; }
+    .stepper-val.val-low { color: var(--danger); background: #fee2e2; }
 
-    .stepper {
-      display: flex;
-      align-items: center;
-      border: 1.5px solid #cbd5e1;
-      border-radius: 8px;
-      overflow: hidden;
-      background: #f8fafc;
-    }
-    .btn-step {
-      width: 36px;
-      height: 36px;
-      border: none;
-      background: #f1f5f9;
-      color: #1e293b;
-      font-size: 1.2rem;
-      font-weight: 900;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
-    }
-    .btn-step:active {
-      background: #cbd5e1;
-    }
-    .stepper-val {
-      width: 40px;
-      text-align: center;
-      font-weight: 900;
-      font-size: 1.15rem;
-      color: #0f172a;
-      border: none;
-      background: white;
-      height: 36px;
-      line-height: 36px;
-    }
-    .stepper-val.val-low {
-      color: var(--danger);
-      background: #fee2e2;
-    }
+    .quick-preset-wrap { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; }
+    .quick-preset-btns { display: flex; gap: 4px; }
+    .btn-preset { background: #e2e8f0; color: #1e293b; border: none; border-radius: 4px; padding: 3px 6px; font-size: 0.78rem; font-weight: 800; cursor: pointer; }
+    .pressure-input { width: 86px; height: 36px; padding: 4px 8px; border: 1.5px solid #cbd5e1; border-radius: 6px; font-weight: 900; font-size: 1.05rem; text-align: right; }
 
-    .quick-preset-wrap {
-      display: flex;
-      flex-direction: column;
-      align-items: flex-end;
-      gap: 4px;
-    }
-    .quick-preset-btns {
-      display: flex;
-      gap: 4px;
-    }
-    .btn-preset {
-      background: #e2e8f0;
-      color: #1e293b;
-      border: none;
-      border-radius: 4px;
-      padding: 3px 6px;
-      font-size: 0.78rem;
-      font-weight: 800;
-      cursor: pointer;
-    }
-    .btn-preset:active {
-      background: #0284c7;
-      color: white;
-    }
-    .pressure-input {
-      width: 86px;
-      height: 36px;
-      padding: 4px 8px;
-      border: 1.5px solid #cbd5e1;
-      border-radius: 6px;
-      font-weight: 900;
-      font-size: 1.05rem;
-      text-align: right;
-    }
+    .status-select { height: 36px; padding: 0 6px; border: 1.5px solid #cbd5e1; border-radius: 8px; font-weight: 800; font-size: 0.9rem; background: white; }
 
-    .status-select {
-      height: 36px;
-      padding: 0 6px;
-      border: 1.5px solid #cbd5e1;
-      border-radius: 8px;
-      font-weight: 800;
-      font-size: 0.9rem;
-      background: white;
-    }
+    .note-drawer { display: none; margin-top: -2px; margin-bottom: 8px; padding: 0 4px; }
+    .note-drawer input { width: 100%; padding: 8px 10px; border: 1.5px solid #fca5a5; background: #fef2f2; border-radius: 6px; font-size: 0.9rem; color: #991b1b; font-weight: 600; }
 
-    .note-drawer {
-      display: none;
-      margin-top: -2px;
-      margin-bottom: 8px;
-      padding: 0 4px;
-    }
-    .note-drawer input {
-      width: 100%;
-      padding: 8px 10px;
-      border: 1.5px solid #fca5a5;
-      background: #fef2f2;
-      border-radius: 6px;
-      font-size: 0.9rem;
-      color: #991b1b;
-      font-weight: 600;
-    }
+    .submit-bar { position: fixed; bottom: 0; left: 0; right: 0; background: white; padding: 10px 14px; border-top: 1.5px solid var(--border); box-shadow: 0 -4px 6px -1px rgba(0,0,0,0.08); z-index: 100; display: flex; gap: 8px; }
+    .btn-prev { flex: 1; background: #64748b; color: white; border: none; padding: 12px; border-radius: 8px; font-size: 1rem; font-weight: 800; cursor: pointer; }
+    .btn-next { flex: 2; background: var(--primary); color: white; border: none; padding: 12px; border-radius: 8px; font-size: 1rem; font-weight: 800; cursor: pointer; }
 
-    .submit-bar {
-      position: fixed;
-      bottom: 0; left: 0; right: 0;
-      background: white;
-      padding: 10px 14px;
-      border-top: 1.5px solid var(--border);
-      box-shadow: 0 -4px 6px -1px rgba(0,0,0,0.08);
-      z-index: 100;
-      display: flex;
-      gap: 8px;
-    }
-    .btn-prev {
-      flex: 1;
-      background: #64748b;
-      color: white;
-      border: none;
-      padding: 12px;
-      border-radius: 8px;
-      font-size: 1rem;
-      font-weight: 800;
-      cursor: pointer;
-    }
-    .btn-next {
-      flex: 2;
-      background: var(--primary);
-      color: white;
-      border: none;
-      padding: 12px;
-      border-radius: 8px;
-      font-size: 1rem;
-      font-weight: 800;
-      cursor: pointer;
-    }
-
-    .toast {
-      position: fixed;
-      top: 20px;
-      left: 50%;
-      transform: translateX(-50%);
-      background: #0f172a;
-      color: white;
-      padding: 10px 18px;
-      border-radius: 20px;
-      font-size: 0.9rem;
-      font-weight: 700;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.25);
-      z-index: 1000;
-      display: none;
-    }
+    .loading-overlay { position: fixed; top:0; left:0; right:0; bottom:0; background: rgba(255,255,255,0.85); display: flex; flex-direction: column; align-items: center; justify-content: center; font-weight: bold; z-index: 999; }
   </style>
 </head>
 <body>
 
-  <div id="toast" class="toast">已將本頁所有項目自動填滿標準數量！</div>
+  <div id="loading" class="loading-overlay">
+    <div>🔄 正在與 Google 試算表連動中...</div>
+  </div>
 
   <div class="top-header">
     <div>
-      <h1>🚑 救護車清點系統</h1>
-      <p>精簡橫向卡片・免開鍵盤步進器</p>
+      <h1>🚑 SF-119 車輛清點</h1>
+      <p id="subInfo">載入同仁資訊中...</p>
     </div>
     <div style="font-size: 0.85rem; background: rgba(255,255,255,0.2); padding: 4px 8px; border-radius: 6px; font-weight: 800;">
       山楓分隊
@@ -382,255 +120,139 @@
   </div>
 
   <div class="quick-toolbar">
-    <button class="btn-quick-fill" onclick="quickFillAll()">
-      ⚡ 一鍵本頁全齊（預設滿量）
-    </button>
-    <button class="btn-toggle-filter" id="filterBtn" onclick="toggleFilterMissing()">
-      🔍 僅顯示缺件/必填
-    </button>
+    <button class="btn-quick-fill" onclick="quickFillAll()">⚡ 一鍵本頁全齊（預設滿量）</button>
+    <button class="btn-toggle-filter" id="filterBtn" onclick="toggleFilterMissing()">🔍 僅顯示缺件/必填</button>
   </div>
 
-  <div class="step-nav">
-    <button class="step-btn active" onclick="switchTab(0)">1. 急救包/包紮</button>
-    <button class="step-btn" onclick="switchTab(1)">2. 氧氣/車載</button>
-    <button class="step-btn" onclick="switchTab(2)">3. 特殊套組</button>
-  </div>
+  <div class="step-nav" id="stepNav"></div>
 
-  <!-- 分頁一：急救包 / 包紮 -->
-  <div id="tab_0" class="tab-panel">
-    <div class="group-box" style="border-color: #fca5a5;">
-      <div class="group-header" style="background: #dc2626;">
-        <span>🎒 主急救包</span>
-        <span style="font-size: 0.8rem; font-weight: normal;">含內層模組包</span>
-      </div>
-
-      <div class="item-row" data-std="10">
-        <div class="item-left">
-          <div class="item-title-wrap">
-            <span class="item-name">4吋無菌紗布</span>
-            <span class="item-std-tag">應備 10 包</span>
-          </div>
-        </div>
-        <div class="item-right">
-          <div class="stepper">
-            <button class="btn-step" onclick="changeQty(this, -1, 10)">-</button>
-            <div class="stepper-val">10</div>
-            <button class="btn-step" onclick="changeQty(this, 1, 10)">+</button>
-          </div>
-        </div>
-      </div>
-      <div class="note-drawer"><input type="text" placeholder="⚠️ 請填寫未補齊或異常原因"></div>
-
-      <div class="item-row" data-std="4">
-        <div class="item-left">
-          <div class="item-title-wrap">
-            <span class="item-name">3吋彈性繃帶</span>
-            <span class="item-std-tag">應備 4 捲</span>
-          </div>
-        </div>
-        <div class="item-right">
-          <div class="stepper">
-            <button class="btn-step" onclick="changeQty(this, -1, 4)">-</button>
-            <div class="stepper-val">4</div>
-            <button class="btn-step" onclick="changeQty(this, 1, 4)">+</button>
-          </div>
-        </div>
-      </div>
-      <div class="note-drawer"><input type="text" placeholder="⚠️ 請填寫未補齊或異常原因"></div>
-
-      <div class="item-row" data-std="5">
-        <div class="item-left">
-          <div class="item-title-wrap">
-            <span class="item-name">三角巾</span>
-            <span class="item-std-tag">應備 5 包</span>
-          </div>
-        </div>
-        <div class="item-right">
-          <div class="stepper">
-            <button class="btn-step" onclick="changeQty(this, -1, 5)">-</button>
-            <div class="stepper-val">5</div>
-            <button class="btn-step" onclick="changeQty(this, 1, 5)">+</button>
-          </div>
-        </div>
-      </div>
-      <div class="note-drawer"><input type="text" placeholder="⚠️ 請填寫未補齊或異常原因"></div>
-
-      <!-- 內層模組包：血糖包 -->
-      <div class="sub-pack-box">
-        <div class="sub-pack-header">👝 內層模組：血糖包</div>
-
-        <div class="item-row" data-type="status">
-          <div class="item-left">
-            <span class="item-name">血糖機主機與採血筆</span>
-            <span class="item-sub-hint">螢幕顯示正常、電量充足</span>
-          </div>
-          <div class="item-right">
-            <select class="status-select" onchange="toggleStatusNote(this)">
-              <option value="正常">✅ 正常</option>
-              <option value="異常">❌ 異常/缺電</option>
-            </select>
-          </div>
-        </div>
-        <div class="note-drawer"><input type="text" placeholder="⚠️ 請填寫血糖機異常原因"></div>
-
-        <div class="item-row" data-std="10">
-          <div class="item-left">
-            <div class="item-title-wrap">
-              <span class="item-name">血糖試紙</span>
-              <span class="item-std-tag">應備 10 片</span>
-            </div>
-          </div>
-          <div class="item-right">
-            <div class="stepper">
-              <button class="btn-step" onclick="changeQty(this, -1, 10)">-</button>
-              <div class="stepper-val">10</div>
-              <button class="btn-step" onclick="changeQty(this, 1, 10)">+</button>
-            </div>
-          </div>
-        </div>
-        <div class="note-drawer"><input type="text" placeholder="⚠️ 請填寫試紙短缺原因"></div>
-      </div>
-
-      <!-- 內層模組包：IV包 -->
-      <div class="sub-pack-box">
-        <div class="sub-pack-header">👝 內層模組：IV 靜脈注射包</div>
-
-        <div class="item-row" data-std="4">
-          <div class="item-left">
-            <div class="item-title-wrap">
-              <span class="item-name">20G 靜脈留置針</span>
-              <span class="item-std-tag">應備 4 支</span>
-            </div>
-          </div>
-          <div class="item-right">
-            <div class="stepper">
-              <button class="btn-step" onclick="changeQty(this, -1, 4)">-</button>
-              <div class="stepper-val">4</div>
-              <button class="btn-step" onclick="changeQty(this, 1, 4)">+</button>
-            </div>
-          </div>
-        </div>
-        <div class="note-drawer"><input type="text" placeholder="⚠️ 請填寫留置針短缺原因"></div>
-
-        <div class="item-row" data-std="2">
-          <div class="item-left">
-            <div class="item-title-wrap">
-              <span class="item-name">0.9% N/S (500ml)</span>
-              <span class="item-std-tag">應備 2 包</span>
-            </div>
-          </div>
-          <div class="item-right">
-            <div class="stepper">
-              <button class="btn-step" onclick="changeQty(this, -1, 2)">-</button>
-              <div class="stepper-val">2</div>
-              <button class="btn-step" onclick="changeQty(this, 1, 2)">+</button>
-            </div>
-          </div>
-        </div>
-        <div class="note-drawer"><input type="text" placeholder="⚠️ 請填寫生理食鹽水短缺原因"></div>
-      </div>
-
-    </div>
-  </div>
-
-  <!-- 分頁二：氧氣 / 車載 -->
-  <div id="tab_1" class="tab-panel" style="display: none;">
-    <div class="group-box" style="border-color: #7dd3fc;">
-      <div class="group-header" style="background: #0284c7;">
-        <span>🫁 氧氣設備與關鍵氣壓</span>
-      </div>
-
-      <div class="item-row" style="border-left: 5px solid #f59e0b;" data-mandatory="true">
-        <div class="item-left">
-          <div class="item-title-wrap">
-            <span class="item-name">攜帶氧氣瓶氣壓</span>
-            <span style="color:#d97706; font-size:0.8rem; font-weight:bold;">⚠️ 必填</span>
-          </div>
-          <span class="item-sub-hint">警戒線：低於 1000 psi</span>
-        </div>
-        <div class="item-right">
-          <div class="quick-preset-wrap">
-            <div class="quick-preset-btns">
-              <button class="btn-preset" onclick="setPressure('oxy_portable', 2000)">2000</button>
-              <button class="btn-preset" onclick="setPressure('oxy_portable', 1500)">1500</button>
-              <button class="btn-preset" onclick="setPressure('oxy_portable', 1000)">1000</button>
-            </div>
-            <input type="number" id="oxy_portable" class="pressure-input" placeholder="psi" value="2000" oninput="checkPressure(this)">
-          </div>
-        </div>
-      </div>
-      <div class="note-drawer"><input type="text" placeholder="⚠️ 請填寫氣壓偏低原因或備註"></div>
-
-      <div class="item-row" style="border-left: 5px solid #f59e0b;" data-mandatory="true">
-        <div class="item-left">
-          <div class="item-title-wrap">
-            <span class="item-name">車裝主氧氣瓶壓</span>
-            <span style="color:#d97706; font-size:0.8rem; font-weight:bold;">⚠️ 必填</span>
-          </div>
-        </div>
-        <div class="item-right">
-          <div class="quick-preset-wrap">
-            <div class="quick-preset-btns">
-              <button class="btn-preset" onclick="setPressure('oxy_main', 2200)">2200</button>
-              <button class="btn-preset" onclick="setPressure('oxy_main', 1800)">1800</button>
-              <button class="btn-preset" onclick="setPressure('oxy_main', 1200)">1200</button>
-            </div>
-            <input type="number" id="oxy_main" class="pressure-input" placeholder="psi" value="2200" oninput="checkPressure(this)">
-          </div>
-        </div>
-      </div>
-      <div class="note-drawer"><input type="text" placeholder="⚠️ 請填寫氣壓偏低原因或備註"></div>
-    </div>
-  </div>
-
-  <!-- 分頁三：特殊套組 -->
-  <div id="tab_2" class="tab-panel" style="display: none;">
-    <div class="group-box" style="border-color: #d8b4fe;">
-      <div class="group-header" style="background: #7e22ce;">
-        <span>📦 特殊急救包</span>
-      </div>
-
-      <div class="item-row" data-type="status">
-        <div class="item-left">
-          <span class="item-name">急產處理包 (產包)</span>
-          <span class="item-sub-hint">確認封條未拆、效期正常</span>
-        </div>
-        <div class="item-right">
-          <select class="status-select" onchange="toggleStatusNote(this)">
-            <option value="正常">✅ 封條完整</option>
-            <option value="異常">❌ 開封/待補</option>
-          </select>
-        </div>
-      </div>
-      <div class="note-drawer"><input type="text" placeholder="⚠️ 請填寫產包開封或異常原因"></div>
-
-      <div class="item-row" data-type="status">
-        <div class="item-left">
-          <span class="item-name">燒燙傷處理套組</span>
-          <span class="item-sub-hint">確認封條未拆、效期正常</span>
-        </div>
-        <div class="item-right">
-          <select class="status-select" onchange="toggleStatusNote(this)">
-            <option value="正常">✅ 封條完整</option>
-            <option value="異常">❌ 開封/待補</option>
-          </select>
-        </div>
-      </div>
-      <div class="note-drawer"><input type="text" placeholder="⚠️ 請填寫燒燙傷包異常原因"></div>
-    </div>
-  </div>
+  <div id="checklistContainer"></div>
 
   <div class="submit-bar">
     <button id="prevBtn" class="btn-prev" onclick="stepChange(-1)" style="display: none;">⬅️ 上一步</button>
-    <button id="nextBtn" class="btn-next" onclick="stepChange(1)">下一步：2. 氧氣/車載 ➔</button>
+    <button id="nextBtn" class="btn-next" onclick="stepChange(1)">下一步 ➔</button>
   </div>
 
   <script>
+    // ⚠️ 請填入你部署的 Google Apps Script Web App URL
+    const GAS_URL = "https://script.google.com/macros/s/AKfycbyBXwfnayjato5donoxrdOUVtv45EihyOU1tYxq8Nix2DsB6AtRBEP1pu4ohc4lrRs_0A/exec";
+
     let currentStep = 0;
-    const totalSteps = 3;
-    const stepNames = ["1. 急救包/包紮", "2. 氧氣/車載", "3. 特殊套組"];
+    let categoryList = [];
     let isFilterMode = false;
 
+    // 初始化：發起 doGet 取得試算表中的品項與設定
+    async function initData() {
+      try {
+        const response = await fetch(`${GAS_URL}?action=getItems`);
+        const result = await response.json();
+        
+        if (result.status === "success") {
+          categoryList = result.data.categories;
+          document.getElementById('subInfo').innerText = `清點車輛：${result.data.vehicleNo || '71車'}｜同仁：${result.data.userName || '值勤同仁'}`;
+          renderUI();
+        } else {
+          alert("讀取試算表失敗：" + result.message);
+        }
+      } catch (err) {
+        console.error("API 連接失敗", err);
+        // 若 API 未連通，啟動本地備用資料渲染機制
+        useFallbackData();
+      } finally {
+        document.getElementById('loading').style.display = 'none';
+      }
+    }
+
+    // 動態渲染 HTML UI
+    function renderUI() {
+      const navContainer = document.getElementById('stepNav');
+      const listContainer = document.getElementById('checklistContainer');
+      navContainer.innerHTML = '';
+      listContainer.innerHTML = '';
+
+      categoryList.forEach((cat, idx) => {
+        // 建立 Step 導覽按鈕
+        const navBtn = document.createElement('button');
+        navBtn.className = `step-btn ${idx === 0 ? 'active' : ''}`;
+        navBtn.innerText = `${idx + 1}. ${cat.name}`;
+        navBtn.onclick = () => switchTab(idx);
+        navContainer.appendChild(navBtn);
+
+        // 建立 Category 面板
+        const panel = document.createElement('div');
+        panel.id = `tab_${idx}`;
+        panel.className = 'tab-panel';
+        panel.style.display = idx === 0 ? 'block' : 'none';
+
+        let html = `<div class="group-box"><div class="group-header"><span>${cat.name}</span></div>`;
+
+        cat.items.forEach(item => {
+          if (item.type === 'number') {
+            html += `
+              <div class="item-row" data-id="${item.id}" data-std="${item.stdQty}">
+                <div class="item-left">
+                  <div class="item-title-wrap">
+                    <span class="item-name">${item.name}</span>
+                    <span class="item-std-tag">應備 ${item.stdQty} ${item.unit}</span>
+                  </div>
+                </div>
+                <div class="item-right">
+                  <div class="stepper">
+                    <button class="btn-step" onclick="changeQty(this, -1, ${item.stdQty})">-</button>
+                    <div class="stepper-val">${item.stdQty}</div>
+                    <button class="btn-step" onclick="changeQty(this, 1, ${item.stdQty})">+</button>
+                  </div>
+                </div>
+              </div>
+              <div class="note-drawer"><input type="text" class="note-input" placeholder="⚠️ 請填寫未補齊原因"></div>
+            `;
+          } else if (item.type === 'pressure') {
+            html += `
+              <div class="item-row" data-id="${item.id}" data-mandatory="true" style="border-left: 5px solid #f59e0b;">
+                <div class="item-left">
+                  <div class="item-title-wrap">
+                    <span class="item-name">${item.name}</span>
+                    <span style="color:#d97706; font-size:0.8rem; font-weight:bold;">⚠️ 必填</span>
+                  </div>
+                </div>
+                <div class="item-right">
+                  <div class="quick-preset-wrap">
+                    <div class="quick-preset-btns">
+                      <button class="btn-preset" onclick="setPressure('${item.id}', 2000)">2000</button>
+                      <button class="btn-preset" onclick="setPressure('${item.id}', 1500)">1500</button>
+                      <button class="btn-preset" onclick="setPressure('${item.id}', 1000)">1000</button>
+                    </div>
+                    <input type="number" id="${item.id}" class="pressure-input" placeholder="psi" value="${item.defaultVal || 2000}" oninput="checkPressure(this)">
+                  </div>
+                </div>
+              </div>
+              <div class="note-drawer"><input type="text" class="note-input" placeholder="⚠️ 氣壓偏低備註"></div>
+            `;
+          } else if (item.type === 'status') {
+            html += `
+              <div class="item-row" data-id="${item.id}" data-type="status">
+                <div class="item-left"><span class="item-name">${item.name}</span></div>
+                <div class="item-right">
+                  <select class="status-select" onchange="toggleStatusNote(this)">
+                    <option value="正常">✅ 正常</option>
+                    <option value="異常">❌ 異常/待補</option>
+                  </select>
+                </div>
+              </div>
+              <div class="note-drawer"><input type="text" class="note-input" placeholder="⚠️ 請填寫異常原因"></div>
+            `;
+          }
+        });
+
+        html += `</div>`;
+        panel.innerHTML = html;
+        listContainer.appendChild(panel);
+      });
+
+      updateNavButtons();
+    }
+
+    // 按鈕控制與互動邏輯
     function changeQty(btn, delta, stdQty) {
       const stepper = btn.parentElement;
       const valElem = stepper.querySelector('.stepper-val');
@@ -644,22 +266,18 @@
       if (updated < stdQty) {
         valElem.classList.add('val-low');
         row.classList.add('is-abnormal');
-        if (noteDrawer && noteDrawer.classList.contains('note-drawer')) {
-          noteDrawer.style.display = 'block';
-        }
+        if (noteDrawer) noteDrawer.style.display = 'block';
       } else {
         valElem.classList.remove('val-low');
         row.classList.remove('is-abnormal');
-        if (noteDrawer && noteDrawer.classList.contains('note-drawer')) {
-          noteDrawer.style.display = 'none';
-        }
+        if (noteDrawer) noteDrawer.style.display = 'none';
       }
     }
 
     function toggleStatusNote(select) {
       const row = select.closest('.item-row');
       const noteDrawer = row.nextElementSibling;
-      if (select.value === '異常' || select.value.includes('開封')) {
+      if (select.value === '異常') {
         row.classList.add('is-abnormal');
         if (noteDrawer) noteDrawer.style.display = 'block';
       } else {
@@ -670,8 +288,10 @@
 
     function setPressure(inputId, val) {
       const input = document.getElementById(inputId);
-      input.value = val;
-      checkPressure(input);
+      if (input) {
+        input.value = val;
+        checkPressure(input);
+      }
     }
 
     function checkPressure(input) {
@@ -688,99 +308,132 @@
     }
 
     function quickFillAll() {
-      const currentTabElem = document.getElementById(`tab_${currentStep}`);
-      const steppers = currentTabElem.querySelectorAll('.item-row[data-std]');
-      steppers.forEach(row => {
+      const currentTab = document.getElementById(`tab_${currentStep}`);
+      currentTab.querySelectorAll('.item-row[data-std]').forEach(row => {
         const std = parseInt(row.getAttribute('data-std'), 10);
         const valElem = row.querySelector('.stepper-val');
-        if (valElem) {
-          valElem.innerText = std;
-          valElem.classList.remove('val-low');
-        }
+        if (valElem) { valElem.innerText = std; valElem.classList.remove('val-low'); }
         row.classList.remove('is-abnormal');
-        const noteDrawer = row.nextElementSibling;
-        if (noteDrawer && noteDrawer.classList.contains('note-drawer')) {
-          noteDrawer.style.display = 'none';
-        }
+        const note = row.nextElementSibling;
+        if (note && note.classList.contains('note-drawer')) note.style.display = 'none';
       });
-
-      const selects = currentTabElem.querySelectorAll('.status-select');
-      selects.forEach(sel => {
-        sel.value = sel.options[0].value;
-        const row = sel.closest('.item-row');
-        row.classList.remove('is-abnormal');
-        const noteDrawer = row.nextElementSibling;
-        if (noteDrawer && noteDrawer.classList.contains('note-drawer')) {
-          noteDrawer.style.display = 'none';
-        }
-      });
-
-      showToast("⚡ 本頁所有器材已帶入標準數量！");
     }
 
     function toggleFilterMissing() {
       isFilterMode = !isFilterMode;
-      const btn = document.getElementById('filterBtn');
-      btn.classList.toggle('active', isFilterMode);
-      btn.innerText = isFilterMode ? "👁️ 顯示全部品項" : "🔍 僅顯示缺件/必填";
-
-      const rows = document.querySelectorAll('.item-row');
-      rows.forEach(row => {
+      document.getElementById('filterBtn').classList.toggle('active', isFilterMode);
+      document.querySelectorAll('.item-row').forEach(row => {
         const isMandatory = row.hasAttribute('data-mandatory');
         const isAbnormal = row.classList.contains('is-abnormal');
-
-        if (isFilterMode) {
-          if (!isMandatory && !isAbnormal) {
-            row.style.display = 'none';
-          } else {
-            row.style.display = 'flex';
-          }
-        } else {
-          row.style.display = 'flex';
-        }
+        row.style.display = (isFilterMode && !isMandatory && !isAbnormal) ? 'none' : 'flex';
       });
     }
 
     function switchTab(index) {
       currentStep = index;
-      for (let i = 0; i < totalSteps; i++) {
-        document.getElementById(`tab_${i}`).style.display = (i === currentStep) ? 'block' : 'none';
-      }
-
-      const btns = document.querySelectorAll('.step-btn');
-      btns.forEach((btn, idx) => {
-        btn.classList.toggle('active', idx === currentStep);
-      });
-
-      const prevBtn = document.getElementById('prevBtn');
-      const nextBtn = document.getElementById('nextBtn');
-
-      prevBtn.style.display = (currentStep === 0) ? 'none' : 'block';
-      if (currentStep === totalSteps - 1) {
-        nextBtn.innerText = "🚀 完成並送出檢查單";
-        nextBtn.style.background = "#059669";
-      } else {
-        nextBtn.innerText = `下一步：${stepNames[currentStep + 1]} ➔`;
-        nextBtn.style.background = "var(--primary)";
-      }
-
+      document.querySelectorAll('.tab-panel').forEach((panel, i) => panel.style.display = i === currentStep ? 'block' : 'none');
+      document.querySelectorAll('.step-btn').forEach((btn, i) => btn.classList.toggle('active', i === currentStep));
+      updateNavButtons();
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
+    function updateNavButtons() {
+      const prevBtn = document.getElementById('prevBtn');
+      const nextBtn = document.getElementById('nextBtn');
+      prevBtn.style.display = currentStep === 0 ? 'none' : 'block';
+      if (currentStep === categoryList.length - 1) {
+        nextBtn.innerText = "🚀 送出清點紀錄至試算表";
+        nextBtn.style.background = "var(--success)";
+      } else {
+        nextBtn.innerText = "下一步 ➔";
+        nextBtn.style.background = "var(--primary)";
+      }
+    }
+
     function stepChange(delta) {
-      if (currentStep + delta >= totalSteps) {
-        alert("🎉 檢查單完成，已儲存！");
+      if (currentStep + delta >= categoryList.length) {
+        submitChecklistData();
         return;
       }
       switchTab(currentStep + delta);
     }
 
-    function showToast(msg) {
-      const t = document.getElementById('toast');
-      t.innerText = msg;
-      t.style.display = 'block';
-      setTimeout(() => { t.style.display = 'none'; }, 2000);
+    // 發起 doPost 送出清點數據至 Google 試算表
+    async function submitChecklistData() {
+      document.getElementById('loading').style.display = 'flex';
+      document.getElementById('loading').innerText = '⏳ 正在寫入 Google 試算表...';
+
+      const payload = {
+        action: "submitChecklist",
+        timestamp: new Date().toISOString(),
+        items: []
+      };
+
+      document.querySelectorAll('.item-row').forEach(row => {
+        const id = row.getAttribute('data-id');
+        const valElem = row.querySelector('.stepper-val');
+        const pressureInput = row.querySelector('.pressure-input');
+        const statusSelect = row.querySelector('.status-select');
+        const noteInput = row.nextElementSibling ? row.nextElementSibling.querySelector('.note-input') : null;
+
+        let val = '';
+        if (valElem) val = valElem.innerText;
+        else if (pressureInput) val = pressureInput.value;
+        else if (statusSelect) val = statusSelect.value;
+
+        payload.items.push({
+          itemId: id,
+          value: val,
+          isAbnormal: row.classList.contains('is-abnormal'),
+          note: noteInput ? noteInput.value : ''
+        });
+      });
+
+      try {
+        const response = await fetch(GAS_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+          body: JSON.stringify(payload)
+        });
+        const resData = await response.json();
+
+        if (resData.status === "success") {
+          alert("🎉 救護車清點紀錄已成功寫入 Google 試算表！");
+          location.reload();
+        } else {
+          alert("❌ 寫入失敗：" + resData.message);
+        }
+      } catch (err) {
+        alert("❌ 傳送過程發生錯誤，請檢查網路狀態。");
+        console.error(err);
+      } finally {
+        document.getElementById('loading').style.display = 'none';
+      }
     }
+
+    // 預設架構（防止 API 未設定時頁面空白）
+    function useFallbackData() {
+      categoryList = [
+        {
+          name: "急救包與包紮",
+          items: [
+            { id: "gauze4", name: "4吋無菌紗布", stdQty: 10, unit: "包", type: "number" },
+            { id: "bandage3", name: "3吋彈性繃帶", stdQty: 4, unit: "捲", type: "number" },
+            { id: "glucometer", name: "血糖機與測試組", type: "status" }
+          ]
+        },
+        {
+          name: "氧氣與車載設備",
+          items: [
+            { id: "oxy_portable", name: "攜帶氧氣鋼瓶氣壓", defaultVal: 2000, type: "pressure" },
+            { id: "zoll", name: "ZOLL 生理監視器", type: "status" }
+          ]
+        }
+      ];
+      renderUI();
+    }
+
+    document.addEventListener("DOMContentLoaded", initData);
   </script>
 </body>
 </html>
