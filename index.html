@@ -432,11 +432,10 @@
       return name;
     }
 
-    // ⚡ 精簡橫向卡片生成邏輯（相容 mandatory_num 模糊比對）
+    // ⚡ 精簡橫向卡片生成邏輯（針對 mandatory_number 精準判定）
     function createItemRowElement(item) {
-      const inputType = String(item.Input_Type || '').toLowerCase();
-      const isMandatory = inputType.includes('mandatory'); // 自動相容 mandatory_num 與 mandatory_number
-      const isQty = inputType.includes('qty');
+      const isMandatory = item.Input_Type === 'mandatory_number';
+      const isQty = item.Input_Type === 'optional_qty';
       const stdQty = parseInt(item.Standard_Qty, 10) || 0;
       const warnMin = parseInt(item.Warning_Min, 10) || 0;
 
@@ -447,13 +446,13 @@
       itemRow.setAttribute('data-id', item.Item_ID);
       itemRow.setAttribute('data-std', stdQty);
       if (isMandatory) {
-        itemRow.style.borderLeft = '5px solid #059669'; // 達標預設綠色外框
+        itemRow.style.borderLeft = '5px solid #059669'; // 綠色達標邊框
         itemRow.setAttribute('data-mandatory', 'true');
       }
 
       let rightControlHtml = '';
       if (isMandatory) {
-        // 電量與氣壓關鍵數據：預設「✅ 達標 (高於標準)」，免輸入數字與鍵盤
+        // 關鍵數據 (mandatory_number)：全換成 ✅ 達標 / ❌ 低於標準 免填數字選單
         rightControlHtml = `
           <select id="input_${item.Item_ID}" class="status-select" onchange="toggleStatusNote(this)">
             <option value="✅ 達標 (高於標準)">✅ 達標 (標準以上)</option>
@@ -753,16 +752,15 @@
       let payloadItems = [];
 
       filteredItems.forEach(item => {
-        const inputType = String(item.Input_Type || '').toLowerCase();
         const valInput = document.getElementById(`input_${item.Item_ID}`);
         const noteInput = document.getElementById(`note_${item.Item_ID}`);
         const val = valInput ? valInput.value : '';
         const note = noteInput ? noteInput.value : '';
 
         let isAbnormal = false;
-        if (inputType.includes('mandatory')) {
+        if (item.Input_Type === 'mandatory_number') {
           if (val === '異常' || val.includes('低於標準')) isAbnormal = true;
-        } else if (inputType.includes('qty')) {
+        } else if (item.Input_Type === 'optional_qty') {
           if (parseFloat(val) < parseFloat(item.Warning_Min)) isAbnormal = true;
         } else if (val === '異常') {
           isAbnormal = true;
