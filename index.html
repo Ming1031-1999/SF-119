@@ -133,7 +133,7 @@
     .tab-content { display: none; }
     .tab-content.active { display: block; }
 
-    /* 🎒 主區塊外框 */
+    /* 🎒 主套組大外框 */
     .group-box {
       border: 1.5px solid #cbd5e1;
       border-radius: 12px;
@@ -150,6 +150,26 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
+    }
+
+    /* 👝 內層小包 (如 血糖包、IV包) */
+    .sub-pack-box {
+      background: #f8fafc;
+      border: 1.5px dashed #64748b;
+      border-radius: 10px;
+      padding: 8px;
+      margin: 10px 0;
+    }
+    .sub-pack-header {
+      font-size: 1rem;
+      font-weight: 900;
+      color: #0f172a;
+      padding-bottom: 6px;
+      margin-bottom: 8px;
+      border-bottom: 1.5px solid #cbd5e1;
+      display: flex;
+      align-items: center;
+      gap: 6px;
     }
 
     /* ⚡ 精簡橫向器材列 */
@@ -393,6 +413,33 @@
       });
     }
 
+    // 解析 Category_2 拆分主分類與小包名稱 (例如: 急救包-血糖包)
+    function parseCat2(cat2Str) {
+      const raw = String(cat2Str || '').trim();
+      const parts = raw.split(/[-—–－_]/).map(p => p.trim()).filter(Boolean);
+      if (parts.length > 1) {
+        return { main: parts[0], sub: parts.slice(1).join('-') };
+      }
+      return { main: raw, sub: '' };
+    }
+
+    function getGroupTheme(cat1, mainCat) {
+      cat1 = String(cat1 || '');
+      mainCat = String(mainCat || '');
+
+      if (mainCat.includes('急救包')) {
+        return { icon: '🎒', headerBg: '#dc2626', headerColor: '#ffffff', borderColor: '#fca5a5' };
+      } else if (mainCat.includes('攜帶氧') || mainCat.includes('氧氣')) {
+        return { icon: '🫁', headerBg: '#0284c7', headerColor: '#ffffff', borderColor: '#7dd3fc' };
+      } else if (mainCat.includes('ZOLL') || mainCat.includes('電擊') || mainCat.includes('心導管')) {
+        return { icon: '⚡', headerBg: '#d97706', headerColor: '#ffffff', borderColor: '#fcd34d' };
+      } else if (cat1.includes('第三部') || mainCat.includes('產包') || mainCat.includes('燒燙傷') || mainCat.includes('大傷')) {
+        return { icon: '📦', headerBg: '#7e22ce', headerColor: '#ffffff', borderColor: '#d8b4fe' };
+      } else {
+        return { icon: '📋', headerBg: '#334155', headerColor: '#ffffff', borderColor: '#cbd5e1' };
+      }
+    }
+
     function getShortName(name) {
       if (name.includes('第一部')) return '1. 急救包/包紮';
       if (name.includes('第二部')) return '2. 車上固定裝備';
@@ -553,7 +600,7 @@
       });
     }
 
-    // 🚀 取消內層 Category_2 拆分，完全依照試算表原始順序渲染
+    // 🚀 完整渲染：按 Category_2 拆分主包與子包，非子包項目保持原試算表順序
     function renderItems() {
       const selectedVehicle = String(document.getElementById('vehicleSelect').value || '');
       const stepNav = document.getElementById('stepNav');
@@ -586,25 +633,74 @@
 
         const cat1Items = filteredItems.filter(i => i.Category_1 === cat1);
 
-        const groupBox = document.createElement('div');
-        groupBox.className = 'group-box';
-
-        const groupHeader = document.createElement('div');
-        groupHeader.className = 'group-header';
-        groupHeader.style.backgroundColor = '#1e3a8a';
-        groupHeader.style.color = '#ffffff';
-        groupHeader.innerHTML = `
-          <span>📦 ${getShortName(cat1)}</span>
-          <span style="font-size:0.85rem; font-weight:normal; opacity:0.95;">依車上實體順序清點</span>
-        `;
-        groupBox.appendChild(groupHeader);
-
-        // 依試算表中的原始順序依次放入
+        // 依 Category_2 主名稱分組
+        const mainCatMap = new Map();
         cat1Items.forEach(item => {
-          groupBox.appendChild(createItemRowElement(item));
+          const { main } = parseCat2(item.Category_2);
+          if (!mainCatMap.has(main)) {
+            mainCatMap.set(main, []);
+          }
+          mainCatMap.get(main).push(item);
         });
 
-        tabContent.appendChild(groupBox);
+        mainCatMap.forEach((itemsInMain, mainCat) => {
+          const theme = getGroupTheme(cat1, mainCat);
+
+          const groupBox = document.createElement('div');
+          groupBox.className = 'group-box';
+          groupBox.style.borderColor = theme.borderColor;
+
+          const groupHeader = document.createElement('div');
+          groupHeader.className = 'group-header';
+          groupHeader.style.backgroundColor = theme.headerBg;
+          groupHeader.style.color = theme.headerColor;
+          groupHeader.innerHTML = `
+            <span>${theme.icon} ${mainCat}</span>
+            <span style="font-size:0.85rem; font-weight:normal; opacity:0.95;">完整內容物檢查</span>
+          `;
+          groupBox.appendChild(groupHeader);
+
+          const directItems = [];
+          const subMap = new Map();
+
+          // 區分直接項目與小包項目 (Maintain Order)
+          itemsInMain.forEach(item => {
+            const { sub } = parseCat2(item.Category_2);
+            if (!sub) {
+              directItems.push(item);
+            } else {
+              if (!subMap.has(sub)) {
+                subMap.set(sub, []);
+              }
+              subMap.get(sub).push(item);
+            }
+          });
+
+          // 1. 先渲染無小包的固定器材/耗材
+          directItems.forEach(item => {
+            groupBox.appendChild(createItemRowElement(item));
+          });
+
+          // 2. 再渲染帶有小包的項目卡片 (如：👝 內層小包：血糖包)
+          subMap.forEach((subItems, subName) => {
+            const subPackBox = document.createElement('div');
+            subPackBox.className = 'sub-pack-box';
+
+            const subHeader = document.createElement('div');
+            subHeader.className = 'sub-pack-header';
+            subHeader.innerHTML = `👝 內層小包：<strong>${subName}</strong>`;
+            subPackBox.appendChild(subHeader);
+
+            subItems.forEach(item => {
+              subPackBox.appendChild(createItemRowElement(item));
+            });
+
+            groupBox.appendChild(subPackBox);
+          });
+
+          tabContent.appendChild(groupBox);
+        });
+
         tabsContainer.appendChild(tabContent);
       });
 
