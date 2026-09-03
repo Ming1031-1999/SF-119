@@ -449,8 +449,9 @@
 
     // ⚡ 單一橫向器材列渲染
     function createItemRowElement(item) {
-      const isMandatory = item.Input_Type === 'mandatory_number';
-      const isQty = item.Input_Type === 'optional_qty';
+      const typeStr = String(item.Input_Type || '').trim().toLowerCase();
+      const isMandatory = typeStr.includes('mandatory'); // 彈性包含 mandatory_num 與 mandatory_number
+      const isQty = typeStr.includes('qty');
       const stdQty = parseInt(item.Standard_Qty, 10) || 0;
       const warnMin = parseInt(item.Warning_Min, 10) || 0;
 
@@ -467,6 +468,7 @@
 
       let rightControlHtml = '';
       if (isMandatory) {
+        // 關鍵數據：全面免填數字，呈現選單
         rightControlHtml = `
           <select id="input_${item.Item_ID}" class="status-select" onchange="toggleStatusNote(this)">
             <option value="✅ 達標 (高於標準)">✅ 達標 (標準以上)</option>
@@ -600,7 +602,6 @@
       });
     }
 
-    // 🚀 完整渲染：按 Category_2 拆分主包與子包，非子包項目保持原試算表順序
     function renderItems() {
       const selectedVehicle = String(document.getElementById('vehicleSelect').value || '');
       const stepNav = document.getElementById('stepNav');
@@ -633,7 +634,7 @@
 
         const cat1Items = filteredItems.filter(i => i.Category_1 === cat1);
 
-        // 依 Category_2 主名稱分組
+        // 依 Category_2 主名稱分組 (例如: 急救包, 攜帶氧)
         const mainCatMap = new Map();
         cat1Items.forEach(item => {
           const { main } = parseCat2(item.Category_2);
@@ -663,7 +664,7 @@
           const directItems = [];
           const subMap = new Map();
 
-          // 區分直接項目與小包項目 (Maintain Order)
+          // 區分直屬項目與子包項目
           itemsInMain.forEach(item => {
             const { sub } = parseCat2(item.Category_2);
             if (!sub) {
@@ -676,12 +677,12 @@
             }
           });
 
-          // 1. 先渲染無小包的固定器材/耗材
+          // 1. 直屬器材（如車上固定器材、獨立包）按試算表順序放入
           directItems.forEach(item => {
             groupBox.appendChild(createItemRowElement(item));
           });
 
-          // 2. 再渲染帶有小包的項目卡片 (如：👝 內層小包：血糖包)
+          // 2. 子包器材（如急救包內的血糖包、IV包）放入子外框
           subMap.forEach((subItems, subName) => {
             const subPackBox = document.createElement('div');
             subPackBox.className = 'sub-pack-box';
@@ -778,15 +779,16 @@
       let payloadItems = [];
 
       filteredItems.forEach(item => {
+        const typeStr = String(item.Input_Type || '').trim().toLowerCase();
         const valInput = document.getElementById(`input_${item.Item_ID}`);
         const noteInput = document.getElementById(`note_${item.Item_ID}`);
         const val = valInput ? valInput.value : '';
         const note = noteInput ? noteInput.value : '';
 
         let isAbnormal = false;
-        if (item.Input_Type === 'mandatory_number') {
+        if (typeStr.includes('mandatory')) {
           if (val === '異常' || val.includes('低於標準')) isAbnormal = true;
-        } else if (item.Input_Type === 'optional_qty') {
+        } else if (typeStr.includes('qty')) {
           if (parseFloat(val) < parseFloat(item.Warning_Min)) isAbnormal = true;
         } else if (val === '異常') {
           isAbnormal = true;
