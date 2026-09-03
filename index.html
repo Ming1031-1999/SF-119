@@ -51,20 +51,6 @@
       border: 1px solid var(--border);
       margin-bottom: 12px;
     }
-     /* 🚨 關鍵數據提示字高亮樣式 */
-    .item-sub-hint.mandatory-hint {
-    color: #dc2626;            /* 醒目深紅色 */
-    background-color: #fef3c7; /* 警告黃色背景 */
-    border: 1.5px solid #f59e0b;
-    font-size: 0.95rem;        /* 放大字體 */
-    font-weight: 900;          /* 極粗體 */
-    padding: 3px 8px;
-    border-radius: 6px;
-    display: inline-block;
-    margin-top: 4px;
-    letter-spacing: 0.5px;
-    }
-    
     label { font-weight: 800; display: block; margin-bottom: 6px; font-size: 1rem; color: #0f172a; }
     select, input, textarea {
       width: 100%;
@@ -147,7 +133,7 @@
     .tab-content { display: none; }
     .tab-content.active { display: block; }
 
-    /* 🎒 主套組大外框 */
+    /* 🎒 主區塊外框 */
     .group-box {
       border: 1.5px solid #cbd5e1;
       border-radius: 12px;
@@ -166,26 +152,6 @@
       justify-content: space-between;
     }
 
-    /* 👝 內層小包 */
-    .sub-pack-box {
-      background: #f8fafc;
-      border: 1.5px dashed #64748b;
-      border-radius: 10px;
-      padding: 8px;
-      margin: 10px 0;
-    }
-    .sub-pack-header {
-      font-size: 1rem;
-      font-weight: 900;
-      color: #0f172a;
-      padding-bottom: 6px;
-      margin-bottom: 8px;
-      border-bottom: 1.5px solid #cbd5e1;
-      display: flex;
-      align-items: center;
-      gap: 6px;
-    }
-
     /* ⚡ 精簡橫向器材列 */
     .item-row {
       display: flex; justify-content: space-between; align-items: center;
@@ -199,6 +165,20 @@
     .item-name { font-weight: 900; font-size: 1.05rem; color: #0f172a; }
     .item-std-tag { font-size: 0.82rem; font-weight: 800; color: #0284c7; background: #e0f2fe; padding: 1px 6px; border-radius: 4px; }
     .item-sub-hint { font-size: 0.82rem; font-weight: 700; color: #1e3a8a; margin-top: 2px; }
+
+    /* 🚨 關鍵數據提示字高亮樣式 */
+    .item-sub-hint.mandatory-hint {
+      color: #dc2626;
+      background-color: #fef3c7;
+      border: 1.5px solid #f59e0b;
+      font-size: 0.9rem;
+      font-weight: 900;
+      padding: 3px 8px;
+      border-radius: 6px;
+      display: inline-block;
+      margin-top: 4px;
+      letter-spacing: 0.3px;
+    }
 
     .item-right { display: flex; align-items: center; gap: 4px; flex-shrink: 0; }
 
@@ -413,32 +393,6 @@
       });
     }
 
-    function parseCat2(cat2Str) {
-      const raw = String(cat2Str || '').trim();
-      const parts = raw.split(/[-—–－_]/).map(p => p.trim()).filter(Boolean);
-      if (parts.length > 1) {
-        return { main: parts[0], sub: parts.slice(1).join('-') };
-      }
-      return { main: raw, sub: '' };
-    }
-
-    function getGroupTheme(cat1, mainCat) {
-      cat1 = String(cat1 || '');
-      mainCat = String(mainCat || '');
-
-      if (mainCat.includes('急救包')) {
-        return { icon: '🎒', headerBg: '#dc2626', headerColor: '#ffffff', borderColor: '#fca5a5' };
-      } else if (mainCat.includes('攜帶氧') || mainCat.includes('氧氣')) {
-        return { icon: '🫁', headerBg: '#0284c7', headerColor: '#ffffff', borderColor: '#7dd3fc' };
-      } else if (mainCat.includes('ZOLL') || mainCat.includes('電擊') || mainCat.includes('心導管')) {
-        return { icon: '⚡', headerBg: '#d97706', headerColor: '#ffffff', borderColor: '#fcd34d' };
-      } else if (cat1.includes('第三部') || mainCat.includes('產包') || mainCat.includes('燒燙傷') || mainCat.includes('大傷')) {
-        return { icon: '📦', headerBg: '#7e22ce', headerColor: '#ffffff', borderColor: '#d8b4fe' };
-      } else {
-        return { icon: '📋', headerBg: '#334155', headerColor: '#ffffff', borderColor: '#cbd5e1' };
-      }
-    }
-
     function getShortName(name) {
       if (name.includes('第一部')) return '1. 急救包/包紮';
       if (name.includes('第二部')) return '2. 車上固定裝備';
@@ -446,76 +400,77 @@
       return name;
     }
 
-function createItemRowElement(item) {
-  const isMandatory = item.Input_Type === 'mandatory_number';
-  const isQty = item.Input_Type === 'optional_qty';
-  const stdQty = parseInt(item.Standard_Qty, 10) || 0;
-  const warnMin = parseInt(item.Warning_Min, 10) || 0;
+    // ⚡ 單一橫向器材列渲染
+    function createItemRowElement(item) {
+      const isMandatory = item.Input_Type === 'mandatory_number';
+      const isQty = item.Input_Type === 'optional_qty';
+      const stdQty = parseInt(item.Standard_Qty, 10) || 0;
+      const warnMin = parseInt(item.Warning_Min, 10) || 0;
 
-  const container = document.createElement('div');
-  
-  const itemRow = document.createElement('div');
-  itemRow.className = 'item-row';
-  itemRow.setAttribute('data-id', item.Item_ID);
-  itemRow.setAttribute('data-std', stdQty);
-  if (isMandatory) {
-    itemRow.style.borderLeft = '5px solid #059669';
-    itemRow.setAttribute('data-mandatory', 'true');
-  }
+      const container = document.createElement('div');
+      
+      const itemRow = document.createElement('div');
+      itemRow.className = 'item-row';
+      itemRow.setAttribute('data-id', item.Item_ID);
+      itemRow.setAttribute('data-std', stdQty);
+      if (isMandatory) {
+        itemRow.style.borderLeft = '5px solid #059669'; // 綠色達標邊框
+        itemRow.setAttribute('data-mandatory', 'true');
+      }
 
-  let rightControlHtml = '';
-  if (isMandatory) {
-    rightControlHtml = `
-      <select id="input_${item.Item_ID}" class="status-select" onchange="toggleStatusNote(this)">
-        <option value="✅ 達標 (高於標準)">✅ 達標 (標準以上)</option>
-        <option value="異常">❌ 低於標準/待處理</option>
-      </select>
-    `;
-  } else if (isQty) {
-    rightControlHtml = `
-      <div class="stepper">
-        <button type="button" class="btn-step" onclick="changeQty('${item.Item_ID}', -1, ${stdQty}, ${warnMin})">-</button>
-        <input type="tel" inputmode="numeric" pattern="[0-9]*" id="input_${item.Item_ID}" class="stepper-input" value="${stdQty}" oninput="checkQtyInput(this, ${stdQty}, ${warnMin})">
-        <button type="button" class="btn-step" onclick="changeQty('${item.Item_ID}', 1, ${stdQty}, ${warnMin})">+</button>
-      </div>
-    `;
-  } else {
-    rightControlHtml = `
-      <select id="input_${item.Item_ID}" class="status-select" onchange="toggleStatusNote(this)">
-        <option value="正常">✅ 正常 / 完整</option>
-        <option value="異常">❌ 異常 / 缺失</option>
-      </select>
-    `;
-  }
+      let rightControlHtml = '';
+      if (isMandatory) {
+        rightControlHtml = `
+          <select id="input_${item.Item_ID}" class="status-select" onchange="toggleStatusNote(this)">
+            <option value="✅ 達標 (高於標準)">✅ 達標 (標準以上)</option>
+            <option value="異常">❌ 低於標準/待處理</option>
+          </select>
+        `;
+      } else if (isQty) {
+        rightControlHtml = `
+          <div class="stepper">
+            <button type="button" class="btn-step" onclick="changeQty('${item.Item_ID}', -1, ${stdQty}, ${warnMin})">-</button>
+            <input type="tel" inputmode="numeric" pattern="[0-9]*" id="input_${item.Item_ID}" class="stepper-input" value="${stdQty}" oninput="checkQtyInput(this, ${stdQty}, ${warnMin})">
+            <button type="button" class="btn-step" onclick="changeQty('${item.Item_ID}', 1, ${stdQty}, ${warnMin})">+</button>
+          </div>
+        `;
+      } else {
+        rightControlHtml = `
+          <select id="input_${item.Item_ID}" class="status-select" onchange="toggleStatusNote(this)">
+            <option value="正常">✅ 正常 / 完整</option>
+            <option value="異常">❌ 異常 / 缺失</option>
+          </select>
+        `;
+      }
 
-  // 💡 自動判定：若為關鍵數值，提示文字自動轉為黃底紅字大標籤
-  const hintHtml = item.Item_Hint ? 
-    (isMandatory 
-      ? `<div class="item-sub-hint mandatory-hint">📌 檢查標準：${item.Item_Hint}</div>`
-      : `<div class="item-sub-hint">${item.Item_Hint}</div>`
-    ) : '';
+      // 自動判定提示文字高亮
+      const hintHtml = item.Item_Hint ? 
+        (isMandatory 
+          ? `<div class="item-sub-hint mandatory-hint">📌 標準：${item.Item_Hint}</div>`
+          : `<div class="item-sub-hint">${item.Item_Hint}</div>`
+        ) : '';
 
-  itemRow.innerHTML = `
-    <div class="item-left">
-      <div class="item-title-wrap">
-        <span class="item-name">${item.Item_Name}</span>
-        ${isQty ? `<span class="item-std-tag">應備 ${stdQty}</span>` : ''}
-        ${isMandatory ? '<span style="color:#059669; font-size:0.82rem; font-weight:bold;">⚠️ 關鍵數據</span>' : ''}
-      </div>
-      ${hintHtml}
-    </div>
-    <div class="item-right">${rightControlHtml}</div>
-  `;
+      itemRow.innerHTML = `
+        <div class="item-left">
+          <div class="item-title-wrap">
+            <span class="item-name">${item.Item_Name}</span>
+            ${isQty ? `<span class="item-std-tag">應備 ${stdQty}</span>` : ''}
+            ${isMandatory ? '<span style="color:#059669; font-size:0.82rem; font-weight:bold;">⚠️ 關鍵數據</span>' : ''}
+          </div>
+          ${hintHtml}
+        </div>
+        <div class="item-right">${rightControlHtml}</div>
+      `;
 
-  const noteDrawer = document.createElement('div');
-  noteDrawer.className = 'note-drawer';
-  noteDrawer.id = `drawer_${item.Item_ID}`;
-  noteDrawer.innerHTML = `<input type="text" id="note_${item.Item_ID}" class="note-input" placeholder="⚠️ 請填寫數值低於標準原因（選填）">`;
+      const noteDrawer = document.createElement('div');
+      noteDrawer.className = 'note-drawer';
+      noteDrawer.id = `drawer_${item.Item_ID}`;
+      noteDrawer.innerHTML = `<input type="text" id="note_${item.Item_ID}" class="note-input" placeholder="⚠️ 請填寫數值低於標準原因（選填）">`;
 
-  container.appendChild(itemRow);
-  container.appendChild(noteDrawer);
-  return container;
-}
+      container.appendChild(itemRow);
+      container.appendChild(noteDrawer);
+      return container;
+    }
 
     /* 步進器與自動抽屜控制邏輯 */
     function changeQty(itemId, delta, stdQty, warnMin) {
@@ -598,6 +553,7 @@ function createItemRowElement(item) {
       });
     }
 
+    // 🚀 取消內層 Category_2 拆分，完全依照試算表原始順序渲染
     function renderItems() {
       const selectedVehicle = String(document.getElementById('vehicleSelect').value || '');
       const stepNav = document.getElementById('stepNav');
@@ -630,70 +586,25 @@ function createItemRowElement(item) {
 
         const cat1Items = filteredItems.filter(i => i.Category_1 === cat1);
 
-        const mainCatMap = new Map();
+        const groupBox = document.createElement('div');
+        groupBox.className = 'group-box';
+
+        const groupHeader = document.createElement('div');
+        groupHeader.className = 'group-header';
+        groupHeader.style.backgroundColor = '#1e3a8a';
+        groupHeader.style.color = '#ffffff';
+        groupHeader.innerHTML = `
+          <span>📦 ${getShortName(cat1)}</span>
+          <span style="font-size:0.85rem; font-weight:normal; opacity:0.95;">依車上實體順序清點</span>
+        `;
+        groupBox.appendChild(groupHeader);
+
+        // 依試算表中的原始順序依次放入
         cat1Items.forEach(item => {
-          const { main } = parseCat2(item.Category_2);
-          if (!mainCatMap.has(main)) {
-            mainCatMap.set(main, []);
-          }
-          mainCatMap.get(main).push(item);
+          groupBox.appendChild(createItemRowElement(item));
         });
 
-        mainCatMap.forEach((itemsInMain, mainCat) => {
-          const theme = getGroupTheme(cat1, mainCat);
-
-          const groupBox = document.createElement('div');
-          groupBox.className = 'group-box';
-          groupBox.style.borderColor = theme.borderColor;
-
-          const groupHeader = document.createElement('div');
-          groupHeader.className = 'group-header';
-          groupHeader.style.backgroundColor = theme.headerBg;
-          groupHeader.style.color = theme.headerColor;
-          groupHeader.innerHTML = `
-            <span>${theme.icon} ${mainCat}</span>
-            <span style="font-size:0.85rem; font-weight:normal; opacity:0.95;">完整內容物檢查</span>
-          `;
-          groupBox.appendChild(groupHeader);
-
-          const directItems = [];
-          const subMap = new Map();
-
-          itemsInMain.forEach(item => {
-            const { sub } = parseCat2(item.Category_2);
-            if (!sub) {
-              directItems.push(item);
-            } else {
-              if (!subMap.has(sub)) {
-                subMap.set(sub, []);
-              }
-              subMap.get(sub).push(item);
-            }
-          });
-
-          directItems.forEach(item => {
-            groupBox.appendChild(createItemRowElement(item));
-          });
-
-          subMap.forEach((subItems, subName) => {
-            const subPackBox = document.createElement('div');
-            subPackBox.className = 'sub-pack-box';
-
-            const subHeader = document.createElement('div');
-            subHeader.className = 'sub-pack-header';
-            subHeader.innerHTML = `👝 內層小包：<strong>${subName}</strong>`;
-            subPackBox.appendChild(subHeader);
-
-            subItems.forEach(item => {
-              subPackBox.appendChild(createItemRowElement(item));
-            });
-
-            groupBox.appendChild(subPackBox);
-          });
-
-          tabContent.appendChild(groupBox);
-        });
-
+        tabContent.appendChild(groupBox);
         tabsContainer.appendChild(tabContent);
       });
 
