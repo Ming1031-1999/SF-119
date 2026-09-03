@@ -51,6 +51,20 @@
       border: 1px solid var(--border);
       margin-bottom: 12px;
     }
+     /* 🚨 關鍵數據提示字高亮樣式 */
+    .item-sub-hint.mandatory-hint {
+    color: #dc2626;            /* 醒目深紅色 */
+    background-color: #fef3c7; /* 警告黃色背景 */
+    border: 1.5px solid #f59e0b;
+    font-size: 0.95rem;        /* 放大字體 */
+    font-weight: 900;          /* 極粗體 */
+    padding: 3px 8px;
+    border-radius: 6px;
+    display: inline-block;
+    margin-top: 4px;
+    letter-spacing: 0.5px;
+    }
+    
     label { font-weight: 800; display: block; margin-bottom: 6px; font-size: 1rem; color: #0f172a; }
     select, input, textarea {
       width: 100%;
@@ -432,71 +446,76 @@
       return name;
     }
 
-    // ⚡ 精簡橫向卡片生成邏輯（針對 mandatory_number 精準判定）
-    function createItemRowElement(item) {
-      const isMandatory = item.Input_Type === 'mandatory_number';
-      const isQty = item.Input_Type === 'optional_qty';
-      const stdQty = parseInt(item.Standard_Qty, 10) || 0;
-      const warnMin = parseInt(item.Warning_Min, 10) || 0;
+function createItemRowElement(item) {
+  const isMandatory = item.Input_Type === 'mandatory_number';
+  const isQty = item.Input_Type === 'optional_qty';
+  const stdQty = parseInt(item.Standard_Qty, 10) || 0;
+  const warnMin = parseInt(item.Warning_Min, 10) || 0;
 
-      const container = document.createElement('div');
-      
-      const itemRow = document.createElement('div');
-      itemRow.className = 'item-row';
-      itemRow.setAttribute('data-id', item.Item_ID);
-      itemRow.setAttribute('data-std', stdQty);
-      if (isMandatory) {
-        itemRow.style.borderLeft = '5px solid #059669'; // 綠色達標邊框
-        itemRow.setAttribute('data-mandatory', 'true');
-      }
+  const container = document.createElement('div');
+  
+  const itemRow = document.createElement('div');
+  itemRow.className = 'item-row';
+  itemRow.setAttribute('data-id', item.Item_ID);
+  itemRow.setAttribute('data-std', stdQty);
+  if (isMandatory) {
+    itemRow.style.borderLeft = '5px solid #059669';
+    itemRow.setAttribute('data-mandatory', 'true');
+  }
 
-      let rightControlHtml = '';
-      if (isMandatory) {
-        // 關鍵數據 (mandatory_number)：全換成 ✅ 達標 / ❌ 低於標準 免填數字選單
-        rightControlHtml = `
-          <select id="input_${item.Item_ID}" class="status-select" onchange="toggleStatusNote(this)">
-            <option value="✅ 達標 (高於標準)">✅ 達標 (標準以上)</option>
-            <option value="異常">❌ 低於標準/待處理</option>
-          </select>
-        `;
-      } else if (isQty) {
-        rightControlHtml = `
-          <div class="stepper">
-            <button type="button" class="btn-step" onclick="changeQty('${item.Item_ID}', -1, ${stdQty}, ${warnMin})">-</button>
-            <input type="tel" inputmode="numeric" pattern="[0-9]*" id="input_${item.Item_ID}" class="stepper-input" value="${stdQty}" oninput="checkQtyInput(this, ${stdQty}, ${warnMin})">
-            <button type="button" class="btn-step" onclick="changeQty('${item.Item_ID}', 1, ${stdQty}, ${warnMin})">+</button>
-          </div>
-        `;
-      } else {
-        rightControlHtml = `
-          <select id="input_${item.Item_ID}" class="status-select" onchange="toggleStatusNote(this)">
-            <option value="正常">✅ 正常 / 完整</option>
-            <option value="異常">❌ 異常 / 缺失</option>
-          </select>
-        `;
-      }
+  let rightControlHtml = '';
+  if (isMandatory) {
+    rightControlHtml = `
+      <select id="input_${item.Item_ID}" class="status-select" onchange="toggleStatusNote(this)">
+        <option value="✅ 達標 (高於標準)">✅ 達標 (標準以上)</option>
+        <option value="異常">❌ 低於標準/待處理</option>
+      </select>
+    `;
+  } else if (isQty) {
+    rightControlHtml = `
+      <div class="stepper">
+        <button type="button" class="btn-step" onclick="changeQty('${item.Item_ID}', -1, ${stdQty}, ${warnMin})">-</button>
+        <input type="tel" inputmode="numeric" pattern="[0-9]*" id="input_${item.Item_ID}" class="stepper-input" value="${stdQty}" oninput="checkQtyInput(this, ${stdQty}, ${warnMin})">
+        <button type="button" class="btn-step" onclick="changeQty('${item.Item_ID}', 1, ${stdQty}, ${warnMin})">+</button>
+      </div>
+    `;
+  } else {
+    rightControlHtml = `
+      <select id="input_${item.Item_ID}" class="status-select" onchange="toggleStatusNote(this)">
+        <option value="正常">✅ 正常 / 完整</option>
+        <option value="異常">❌ 異常 / 缺失</option>
+      </select>
+    `;
+  }
 
-      itemRow.innerHTML = `
-        <div class="item-left">
-          <div class="item-title-wrap">
-            <span class="item-name">${item.Item_Name}</span>
-            ${isQty ? `<span class="item-std-tag">應備 ${stdQty}</span>` : ''}
-            ${isMandatory ? '<span style="color:#059669; font-size:0.82rem; font-weight:bold;">⚠️ 關鍵數據</span>' : ''}
-          </div>
-          ${item.Item_Hint ? `<span class="item-sub-hint">${item.Item_Hint}</span>` : ''}
-        </div>
-        <div class="item-right">${rightControlHtml}</div>
-      `;
+  // 💡 自動判定：若為關鍵數值，提示文字自動轉為黃底紅字大標籤
+  const hintHtml = item.Item_Hint ? 
+    (isMandatory 
+      ? `<div class="item-sub-hint mandatory-hint">📌 檢查標準：${item.Item_Hint}</div>`
+      : `<div class="item-sub-hint">${item.Item_Hint}</div>`
+    ) : '';
 
-      const noteDrawer = document.createElement('div');
-      noteDrawer.className = 'note-drawer';
-      noteDrawer.id = `drawer_${item.Item_ID}`;
-      noteDrawer.innerHTML = `<input type="text" id="note_${item.Item_ID}" class="note-input" placeholder="⚠️ 請填寫數值低於標準原因（選填）">`;
+  itemRow.innerHTML = `
+    <div class="item-left">
+      <div class="item-title-wrap">
+        <span class="item-name">${item.Item_Name}</span>
+        ${isQty ? `<span class="item-std-tag">應備 ${stdQty}</span>` : ''}
+        ${isMandatory ? '<span style="color:#059669; font-size:0.82rem; font-weight:bold;">⚠️ 關鍵數據</span>' : ''}
+      </div>
+      ${hintHtml}
+    </div>
+    <div class="item-right">${rightControlHtml}</div>
+  `;
 
-      container.appendChild(itemRow);
-      container.appendChild(noteDrawer);
-      return container;
-    }
+  const noteDrawer = document.createElement('div');
+  noteDrawer.className = 'note-drawer';
+  noteDrawer.id = `drawer_${item.Item_ID}`;
+  noteDrawer.innerHTML = `<input type="text" id="note_${item.Item_ID}" class="note-input" placeholder="⚠️ 請填寫數值低於標準原因（選填）">`;
+
+  container.appendChild(itemRow);
+  container.appendChild(noteDrawer);
+  return container;
+}
 
     /* 步進器與自動抽屜控制邏輯 */
     function changeQty(itemId, delta, stdQty, warnMin) {
